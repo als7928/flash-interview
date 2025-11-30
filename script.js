@@ -7,7 +7,7 @@ let interviewData = [
     { "id": "root-2", "category": "지원 동기", "question": "우리 회사에 지원한 이유는 무엇인가요?", "children": [] }
 ];
 let currentTimer = null, flipTimeout = null, activeQuestionId = null, currentLanguage = 'ko';
-let dfsOrderedQuestions = [], dfsCurrentIndex = 0;
+let dfsOrderedQuestions = [], dfsCurrentIndex = -1;
 
 // --- 번역 데이터 ---
 const translations = {
@@ -75,7 +75,7 @@ function generateDfsOrder() {
         }
     };
     interviewData.forEach(dfs);
-    dfsCurrentIndex = 0;
+    dfsCurrentIndex = -1;
 }
 
 // --- 그래프 에디터 ---
@@ -197,10 +197,9 @@ function nextQuestion() {
     }
 
     if (orderMode === 'dfs') {
-        if (dfsCurrentIndex >= dfsOrderedQuestions.length - 1) {
+        dfsCurrentIndex++;
+        if (dfsCurrentIndex >= dfsOrderedQuestions.length) {
             dfsCurrentIndex = 0; // Loop back to the start
-        } else {
-            dfsCurrentIndex++;
         }
         data = dfsOrderedQuestions[dfsCurrentIndex];
     } else { // random mode
