@@ -72,14 +72,19 @@ function renderNode(node, parentElement) {
 
     const actions = document.createElement('div');
     actions.className = 'node-actions';
+    
     const addChildBtn = document.createElement('button');
-    addChildBtn.className = 'btn btn-primary btn-sm';
-    addChildBtn.textContent = '+';
+    addChildBtn.className = 'btn btn-sm';
+    addChildBtn.title = '꼬리 질문 추가';
+    addChildBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>`;
     addChildBtn.addEventListener('click', () => addChildQuestion(node.id));
+
     const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'btn btn-danger btn-sm';
-    deleteBtn.textContent = '-';
+    deleteBtn.className = 'btn btn-sm';
+    deleteBtn.title = '질문 삭제';
+    deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11H7v-2h10v2z"/></svg>`;
     deleteBtn.addEventListener('click', () => deleteQuestion(node.id));
+    
     actions.appendChild(addChildBtn);
     actions.appendChild(deleteBtn);
 

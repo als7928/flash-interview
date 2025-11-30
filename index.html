@@ -10,35 +10,39 @@
     <main class="main-container">
         <!-- 왼쪽: 그래프 에디터 영역 -->
         <div class="editor-panel">
-            <div class="editor-header">
-                <h3>질문 그래프 에디터</h3>
-                <button class="btn btn-primary" onclick="addRootQuestion()">+ 새 질문 추가</button>
-            </div>
-            <div id="graph-editor">
-                <!-- 질문 그래프가 동적으로 생성될 영역 -->
-            </div>
-            <div class="editor-footer">
-                <div class="settings-group">
-                    <button class="btn btn-secondary" onclick="document.getElementById('file-input').click()">📂 설정 불러오기</button>
-                    <input type="file" id="file-input" accept=".json" onchange="loadFromFile(this)" style="display: none;">
-                    <button class="btn btn-secondary" onclick="saveToFile()">💾 설정 저장하기</button>
+            <div class="editor-content-wrapper">
+                <div class="editor-header">
+                    <h3>질문 그래프 에디터</h3>
+                    <button class="btn btn-primary" onclick="addRootQuestion()">+ 새 질문 추가</button>
                 </div>
-                <div class="settings-group">
-                    <label for="language-select">언어:</label>
-                    <select id="language-select">
-                        <option value="system">시스템</option>
-                        <option value="ko">한국어</option>
-                        <option value="en">English</option>
-                    </select>
-                    <label for="theme-select">테마:</label>
-                    <select id="theme-select">
-                        <option value="system">시스템</option>
-                        <option value="light">라이트</option>
-                        <option value="dark">다크</option>
-                    </select>
+                <div id="graph-editor">
+                    <!-- 질문 그래프가 동적으로 생성될 영역 -->
+                </div>
+                <div class="editor-footer">
+                    <div class="settings-group">
+                        <button class="btn btn-secondary" onclick="document.getElementById('file-input').click()">📂 설정 불러오기</button>
+                        <input type="file" id="file-input" accept=".json" onchange="loadFromFile(this)" style="display: none;">
+                        <button class="btn btn-secondary" onclick="saveToFile()">💾 설정 저장하기</button>
+                    </div>
+                    <div class="settings-group">
+                        <label for="language-select">언어:</label>
+                        <select id="language-select">
+                            <option value="system">시스템</option>
+                            <option value="ko">한국어</option>
+                            <option value="en">English</option>
+                        </select>
+                        <label for="theme-select">테마:</label>
+                        <select id="theme-select">
+                            <option value="system">시스템</option>
+                            <option value="light">라이트</option>
+                            <option value="dark">다크</option>
+                        </select>
+                    </div>
                 </div>
             </div>
-            <button class="collapse-btn" title="에디터 접기">⟨</button>
+            <button class="collapse-btn" title="에디터 접기">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+            </button>
         </div>
 
         <div class="resizer"></div>
