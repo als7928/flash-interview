@@ -75,6 +75,12 @@ body {
     gap: 8px;
     min-width: 0; /* Prevent content from pushing out */
 }
+.editor-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0; /* Prevent content from pushing out */
+}
 #graph-editor { 
     flex-grow: 1; 
     overflow-y: auto; 
@@ -99,10 +105,7 @@ body {
 
 /* --- 접기/펼치기 버튼 & 리사이저 --- */
 .collapse-btn {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    z-index: 30;
+    position: relative;
     padding: 0;
     width: 36px;
     height: 36px;
@@ -114,6 +117,7 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
     background: none;
+    flex-shrink: 0; /* Prevent shrinking in flex container */
 }
 .collapse-btn:hover { 
     background-color: var(--input-bg); 
@@ -127,11 +131,31 @@ body {
 }
 
 .expand-btn {
-    position: absolute; /* Changed to absolute */
-    top: 8px;
-    left: 8px;
+    position: absolute;
+    top: 12px;
+    left: 16px;
     z-index: 30; /* High z-index */
     background-color: var(--panel-bg);
+    /* Match the styles of collapse-btn */
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.expand-btn:hover {
+    background-color: var(--input-bg); 
+    border-color: var(--border-color);
+}
+.expand-btn svg {
+    width: 24px; 
+    height: 24px; 
+    fill: var(--text-color); 
 }
 
 .editor-panel.collapsed {

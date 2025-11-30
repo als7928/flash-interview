@@ -470,11 +470,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (savedData) {
         try {
             const parsedData = JSON.parse(savedData);
-            if (Array.isArray(parsedData) && parsedData.length > 0) { // Check for non-empty array
+            if (Array.isArray(parsedData)) { // An empty array is a valid state
                 interviewData = parsedData;
                 console.log("Loaded interview data from local storage.");
             } else {
-                console.warn("Local storage data is empty or not an array, using default interview data.");
+                console.warn("Local storage data is not an array, using default interview data.");
             }
         } catch (e) {
             console.error("Error parsing local storage data, using default interview data.", e);
