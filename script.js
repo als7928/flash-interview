@@ -19,7 +19,8 @@ const translations = {
         info_ready: "The card will flip shortly.", answer_start: "Start your answer!",
         tail_questions_title: "💡 Follow-up Questions:", no_tail_questions: "None", add_tail_question_title: "Add follow-up",
         delete_question_title: "Delete question", confirm_delete: "Really delete this question and all its children?",
-        new_question_placeholder: "Enter new question.", new_tail_question_placeholder: "Enter new follow-up question."
+        new_question_placeholder: "Enter new question.", new_tail_question_placeholder: "Enter new follow-up question.",
+        new_question_category: "New Question"
     },
     ko: {
         editor_title: "질문 그래프 에디터", add_new_question: "새 질문 추가", load_settings: "설정 불러오기",
@@ -30,7 +31,8 @@ const translations = {
         info_ready: "잠시 후 카드가 뒤집힙니다.", answer_start: "답변을 시작하세요!",
         tail_questions_title: "💡 예상 꼬리 질문:", no_tail_questions: "없음", add_tail_question_title: "꼬리 질문 추가",
         delete_question_title: "질문 삭제", confirm_delete: "정말로 이 질문과 모든 하위 질문을 삭제하시겠습니까?",
-        new_question_placeholder: "새로운 질문을 입력하세요.", new_tail_question_placeholder: "새로운 꼬리 질문을 입력하세요."
+        new_question_placeholder: "새로운 질문을 입력하세요.", new_tail_question_placeholder: "새로운 꼬리 질문을 입력하세요.",
+        new_question_category: "새 질문"
     }
 };
 
@@ -43,11 +45,15 @@ function setLanguage(lang) {
             el.title = ''; // Clear title first
             if (el.tagName === 'BUTTON' && el.textContent.trim().length === 0) { // Icon-only buttons
                 el.title = translations[currentLanguage][key];
-            } else {
+            } else if (el.hasAttribute('placeholder')) {
+                el.placeholder = translations[currentLanguage][key];
+            }
+            else {
                 el.textContent = translations[currentLanguage][key];
             }
         }
     });
+    renderGraph();
 }
 function flattenData(nodes) { return nodes.reduce((acc, node) => { acc.push(node); if (node.children) acc.push(...flattenData(node.children)); return acc; }, []); }
 function findNodeById(nodes, id) { for (const node of nodes) { if (node.id === id) return node; if (node.children) { const found = findNodeById(node.children, id); if (found) return found; } } return null; }
@@ -64,7 +70,12 @@ function renderNode(node, parentElement) {
     const textarea = document.createElement('textarea');
     textarea.value = node.question;
     textarea.rows = 1;
+    const isRoot = interviewData.some(rootNode => rootNode.id === node.id);
+    textarea.placeholder = isRoot 
+        ? translations[currentLanguage].new_question_placeholder
+        : translations[currentLanguage].new_tail_question_placeholder;
     textarea.addEventListener('input', () => { autoResizeTextarea(textarea); node.question = textarea.value; });
+    textarea.addEventListener('click', () => showQuestion(node.id));
     setTimeout(() => autoResizeTextarea(textarea), 0);
     const actions = document.createElement('div');
     actions.className = 'node-actions';
@@ -92,11 +103,44 @@ function renderNode(node, parentElement) {
     parentElement.appendChild(nodeItem);
 }
 function renderGraph() { document.getElementById('graph-editor').innerHTML = ''; interviewData.forEach(n => renderNode(n, document.getElementById('graph-editor'))); }
-function addRootQuestion() { interviewData.push({ id: `root-${Date.now()}`, category: "새 질문", question: translations[currentLanguage].new_question_placeholder, children: [] }); renderGraph(); }
-function addChildQuestion(id) { const p = findNodeById(interviewData, id); if (p) { p.children = p.children || []; p.children.push({ id: `child-${Date.now()}`, question: translations[currentLanguage].new_tail_question_placeholder, children: [] }); renderGraph(); } }
+function addRootQuestion() { interviewData.push({ id: `root-${Date.now()}`, category: translations[currentLanguage].new_question_category, question: '', children: [] }); renderGraph(); }
+function addChildQuestion(id) { const p = findNodeById(interviewData, id); if (p) { p.children = p.children || []; p.children.push({ id: `child-${Date.now()}`, question: '', children: [] }); renderGraph(); } }
 function deleteQuestion(id) { if (confirm(translations[currentLanguage].confirm_delete)) { deleteNodeById(interviewData, id); renderGraph(); } }
 
 // --- 면접 카드 기능 ---
+function showQuestion(id) {
+    stopTimer();
+    if (activeQuestionId) {
+        const prevActiveNode = document.querySelector(`.node-item[data-id="${activeQuestionId}"]`);
+        if (prevActiveNode) prevActiveNode.classList.remove('is-active');
+    }
+
+    const data = findNodeById(interviewData, id);
+    if (!data) return;
+
+    activeQuestionId = data.id;
+    const activeNode = document.querySelector(`.node-item[data-id="${activeQuestionId}"]`);
+    if (activeNode) {
+        activeNode.classList.add('is-active');
+        activeNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    const card = document.getElementById('card');
+    card.classList.remove('is-flipped');
+
+    setTimeout(() => {
+        let category = "꼬리 질문";
+        const rootParent = interviewData.find(root => findNodeById([root], data.id));
+        if (rootParent) {
+            category = rootParent.id === data.id ? (rootParent.category || "기본 질문") : (rootParent.category + "의 꼬리질문");
+        }
+        document.getElementById('q-category').innerText = category;
+        document.getElementById('q-text').innerText = data.question;
+        const tailList = document.getElementById('q-tail');
+        tailList.innerHTML = (data.children && data.children.length > 0) ? data.children.map(q => `<li>${q.question}</li>`).join('') : `<li>${translations[currentLanguage].no_tail_questions}</li>`;
+    }, 200);
+}
+
 function nextQuestion() {
     stopTimer();
     if (activeQuestionId) { document.querySelector(`.node-item[data-id="${activeQuestionId}"]`)?.classList.remove('is-active'); }
@@ -141,7 +185,8 @@ function startTimer() {
         const diff = (Date.now() - startTime) / 1000;
         timerEl.innerText = diff.toFixed(2);
         if (diff >= maxTime) {
-            nextQuestion();
+            stopTimer();
+            document.getElementById('card').classList.remove('is-flipped');
         }
     }, 10);
 }
@@ -149,7 +194,7 @@ function stopTimer() { if (currentTimer) clearInterval(currentTimer); if (flipTi
 
 // --- 파일 저장/불러오기 ---
 function saveToFile() { const d = JSON.stringify(interviewData, null, 2), b = new Blob([d], { type: "application/json" }), a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "interview_questions.json"; a.click(); URL.revokeObjectURL(a.href) }
-function loadFromFile(i) { const f = i.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => { try { const j = JSON.parse(e.target.result); if (Array.isArray(j)) { interviewData = j; setLanguage(localStorage.getItem('language')||'system'); renderGraph(); alert("설정 파일이 성공적으로 로드되었습니다!") } else alert("올바른 JSON 형식이 아닙니다.") } catch (err) { alert("파일을 읽는 중 오류가 발생했습니다: " + err.message) } }; r.readAsText(f) }
+function loadFromFile(i) { const f = i.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => { try { const j = JSON.parse(e.target.result); if (Array.isArray(j)) { interviewData = j; setLanguage(localStorage.getItem('language')||'system'); alert("설정 파일이 성공적으로 로드되었습니다!") } else alert("올바른 JSON 형식이 아닙니다.") } catch (err) { alert("파일을 읽는 중 오류가 발생했습니다: " + err.message) } }; r.readAsText(f) }
 
 // --- UI 상호작용 초기화 ---
 function initializeSettings() {
@@ -158,7 +203,7 @@ function initializeSettings() {
     const applyTheme = (theme) => { document.documentElement.setAttribute('data-theme', theme === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme); };
     
     themeSelect.addEventListener('change', () => { const val = themeSelect.value; localStorage.setItem('theme', val); applyTheme(val); });
-    langSelect.addEventListener('change', () => { const val = langSelect.value; localStorage.setItem('language', val); setLanguage(val); renderGraph(); });
+    langSelect.addEventListener('change', () => { const val = langSelect.value; localStorage.setItem('language', val); setLanguage(val); });
 
     const savedTheme = localStorage.getItem('theme') || 'system';
     const savedLang = localStorage.getItem('language') || 'system';
@@ -220,5 +265,10 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeResizer();
     initializeCollapser();
     
-    document.getElementById('card').addEventListener('click', nextQuestion);
+    document.getElementById('card').addEventListener('click', () => {
+        const card = document.getElementById('card');
+        if (card.classList.contains('is-flipped')) return; // 뒷면이면 아무것도 안함
+        card.classList.add('is-flipped');
+        startTimer();
+    });
 });
