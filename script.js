@@ -112,6 +112,14 @@ function findNodeById(nodes, id) { for (const node of nodes) { if (node.id === i
 function deleteNodeById(nodes, id) { for (let i = 0; i < nodes.length; i++) { if (nodes[i].id === id) { nodes.splice(i, 1); return true; } if (nodes[i].children && deleteNodeById(nodes[i].children, id)) return true; } return false; }
 function autoResizeTextarea(textarea) { textarea.style.height = 'auto'; textarea.style.height = textarea.scrollHeight + 'px'; }
 
+function saveInterviewDataToLocalStorage() {
+    try {
+        localStorage.setItem('FLASH_INTERVIEW_QUESTIONS', JSON.stringify(interviewData));
+    } catch (e) {
+        console.error("Error saving interview data to local storage", e);
+    }
+}
+
 function generateDfsOrder() {
     dfsOrderedQuestions = [];
     const dfs = (node) => {
@@ -122,6 +130,7 @@ function generateDfsOrder() {
     };
     interviewData.forEach(dfs);
     dfsCurrentIndex = -1;
+    saveInterviewDataToLocalStorage(); // Add this line
 }
 
 // --- 그래프 에디터 ---
@@ -434,22 +443,44 @@ function initializeCollapser() {
     const editorPanel = document.getElementById('editor-panel');
     const resizer = document.getElementById('resizer');
 
+    // Set initial display state for expandBtn
+    expandBtn.style.display = editorPanel.classList.contains('collapsed') ? 'flex' : 'none';
+
     collapseBtn.addEventListener('click', () => {
         editorPanel.classList.add('collapsed');
         resizer.style.display = 'none';
-        expandBtn.style.display = 'flex';
+        expandBtn.style.display = 'flex'; // Show expand button
     });
 
     expandBtn.addEventListener('click', () => {
         editorPanel.classList.remove('collapsed');
+        editorPanel.style.flexBasis = '450px'; // Restore default width
+        editorPanel.style.minWidth = '450px'; // Restore default min-width
         resizer.style.display = 'block';
-        expandBtn.style.display = 'none';
+        expandBtn.style.display = 'none'; // Hide expand button
     });
 }
 
 // --- 앱 초기화 ---
 document.addEventListener('DOMContentLoaded', () => {
     initializeSettings();
+    
+    // Load interview data from Local Storage
+    const savedData = localStorage.getItem('FLASH_INTERVIEW_QUESTIONS');
+    if (savedData) {
+        try {
+            const parsedData = JSON.parse(savedData);
+            if (Array.isArray(parsedData) && parsedData.length > 0) { // Check for non-empty array
+                interviewData = parsedData;
+                console.log("Loaded interview data from local storage.");
+            } else {
+                console.warn("Local storage data is empty or not an array, using default interview data.");
+            }
+        } catch (e) {
+            console.error("Error parsing local storage data, using default interview data.", e);
+        }
+    }
+    
     renderGraph();
     initializeResizer();
     initializeCollapser();

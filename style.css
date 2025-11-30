@@ -3,7 +3,6 @@
     --border-radius-sm: 8px;
     --border-radius-md: 12px;
     --border-radius-lg: 16px;
-
     --bg-color: #f7f8fa;
     --text-color: #333;
     --panel-bg: #ffffff;
@@ -43,24 +42,23 @@ body {
 
 /* --- 에디터 패널 --- */
 .editor-panel {
-    display: flex; /* Changed */
+    display: flex;
     flex-direction: column;
     height: 100%;
     background-color: var(--panel-bg);
     border-right: 1px solid var(--border-color);
     flex-shrink: 0;
     flex-basis: 450px;
-    min-width: 0; /* Changed */
-    transition: flex-basis 0.4s ease, min-width 0.4s ease;
+    min-width: 50px; /* Set a minimum width for collapsed state */
+    transition: flex-basis 0.3s ease, min-width 0.3s ease, border-width 0.3s ease;
     position: relative;
     overflow: hidden;
 }
 .editor-content-wrapper { 
     display: flex; 
     flex-direction: column;
-    width: 100%; 
-    height: 100%; 
-    min-height: 0;
+    flex-grow: 1; /* Make it take available height */
+    min-height: 0; /* Crucial for scrolling flex items */
     transition: opacity 0.2s ease-in-out;
 }
 .editor-header { 
@@ -75,11 +73,13 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0; /* Prevent content from pushing out */
 }
 #graph-editor { 
     flex-grow: 1; 
     overflow-y: auto; 
     padding: 16px; 
+    min-height: 0; /* Crucial for scrollable flex item */
 }
 .editor-footer { 
     padding: 12px; 
@@ -88,7 +88,7 @@ body {
     display: flex; 
     flex-direction: column; 
     gap: 12px;
-    box-shadow: 0 -4px 12px -4px var(--shadow-color-light);
+    box-shadow: 0 -4px 12px -4px var(--shadow-color-light); /* Visual separator */
 }
 .settings-group { 
     display: flex; 
@@ -98,59 +98,63 @@ body {
 }
 
 /* --- 접기/펼치기 버튼 & 리사이저 --- */
-.collapse-btn, .expand-btn {
+.collapse-btn {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 30;
     padding: 0;
     width: 36px;
     height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: none;
     border: 1px solid transparent;
     border-radius: var(--border-radius-md);
     cursor: pointer;
     transition: all 0.2s ease;
+    background: none;
 }
-.collapse-btn {
-    position: relative;
-}
-.expand-btn {
-    position: absolute;
-    top: 8px;
-    left: 7px;
-    z-index: 25;
-}
-.collapse-btn:hover, .expand-btn:hover { 
+.collapse-btn:hover { 
     background-color: var(--input-bg); 
     border-color: var(--border-color);
 }
-.collapse-btn svg, .expand-btn svg { 
+.collapse-btn svg { 
     width: 24px; 
     height: 24px; 
     fill: var(--text-color); 
     transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); 
 }
 
+.expand-btn {
+    position: absolute; /* Changed to absolute */
+    top: 8px;
+    left: 8px;
+    z-index: 30; /* High z-index */
+    background-color: var(--panel-bg);
+}
+
 .editor-panel.collapsed {
-    flex-basis: 0;
-    min-width: 0;
+    flex-basis: 50px; /* Small width when collapsed */
+    min-width: 50px;
     border-width: 0;
 }
 .editor-panel.collapsed .editor-content-wrapper {
     opacity: 0;
     pointer-events: none;
 }
+.editor-panel.collapsed .collapse-btn {
+    display: none; /* Hide collapse button when collapsed */
+}
+.editor-panel.collapsed + .resizer { /* Target adjacent resizer */
+    left: 50px; /* Position resizer at the edge of collapsed panel */
+}
 
-.resizer { 
-    position: absolute; 
-    top: 0; 
-    right: -2px; 
-    height: 100%; 
-    width: 4px; 
-    cursor: col-resize; 
-    background-color: transparent; 
-    z-index: 15; 
-    transition: background-color 0.2s; 
+/* Ensure icons in buttons are correctly styled */
+.btn svg {
+    vertical-align: middle;
+    margin-right: 8px;
+    fill: currentColor;
 }
 .resizer:hover { background-color: var(--primary-color); }
 
