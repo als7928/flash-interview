@@ -18,8 +18,6 @@ const translations = {
         max_answer_time_label: "Max Answer Time (s):",
         start_button: "Start / Next", question_ready: "Press the Start button",
         info_ready: "The card will flip shortly.", answer_start: "Start your answer!",
-        tail_questions_title: "💡 Follow-up Questions:", no_tail_questions: "None", add_tail_question_title: "Add follow-up",
-        delete_question_title: "Delete question", confirm_delete: "Really delete this question and all its children?",
         new_question_placeholder: "Enter new question.", new_tail_question_placeholder: "Enter new follow-up question.",
         new_question_category: "New Question",
         order_mode_label: "Order:",
@@ -33,8 +31,6 @@ const translations = {
         max_answer_time_label: "최대 답변 시간(초):",
         start_button: "시작 / 다음 질문", question_ready: "시작 버튼을 눌러주세요",
         info_ready: "잠시 후 카드가 뒤집힙니다.", answer_start: "답변을 시작하세요!",
-        tail_questions_title: "💡 예상 꼬리 질문:", no_tail_questions: "없음", add_tail_question_title: "꼬리 질문 추가",
-        delete_question_title: "질문 삭제", confirm_delete: "정말로 이 질문과 모든 하위 질문을 삭제하시겠습니까?",
         new_question_placeholder: "새로운 질문을 입력하세요.", new_tail_question_placeholder: "새로운 꼬리 질문을 입력하세요.",
         new_question_category: "새 질문",
         order_mode_label: "질문 순서:",
@@ -284,8 +280,6 @@ function showQuestion(id) {
 
     setTimeout(() => {
         document.getElementById('q-text').innerText = data.question;
-        const tailList = document.getElementById('q-tail');
-        tailList.innerHTML = (data.children && data.children.length > 0) ? data.children.map(q => `<li>${q.question}</li>`).join('') : `<li>${translations[currentLanguage].no_tail_questions}</li>`;
     }, 200);
 }
 
@@ -330,8 +324,6 @@ function nextQuestion() {
     }
     setTimeout(() => {
         document.getElementById('q-text').innerText = data.question;
-        const tailList = document.getElementById('q-tail');
-        tailList.innerHTML = (data.children && data.children.length > 0) ? data.children.map(q => `<li>${q.question}</li>`).join('') : `<li>${translations[currentLanguage].no_tail_questions}</li>`;
         
         const flipTime = document.getElementById('flip-time').value;
         const timerEl = document.getElementById('flip-timer-animation');
