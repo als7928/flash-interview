@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>면접 실전 암기 트레이닝</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --bg-color: #f4f6f7;
+        }
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        /* 컨트롤 패널 스타일 */
+        .control-panel {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-secondary { background-color: var(--secondary-color); color: white; }
+        .btn:hover { opacity: 0.9; }
+        
+        input[type="file"] { display: none; }
+
+        /* 카드 영역 스타일 (3D 뒤집기 효과) */
+        .card-container {
+            perspective: 1000px;
+            width: 100%;
+            max-width: 500px;
+            height: 350px;
+        }
+        
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+        }
+
+        .card.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        /* 카드 앞면 (질문) */
+        .card-front {
+            background-color: #ffffff;
+            color: #333;
+            border: 2px solid var(--primary-color);
+        }
+
+        /* 카드 뒷면 (타이머 및 꼬리질문) */
+        .card-back {
+            background-color: var(--secondary-color);
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+        .category-badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-bottom: 15px;
+        }
+
+        h2 { margin: 0 0 10px 0; font-size: 1.5rem; word-break: keep-all; }
+        
+        .tail-questions {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            text-align: left;
+            width: 100%;
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .timer {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #f1c40f;
+        }
+
+        /* 설정 모달 */
+        #data-modal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            z-index: 100;
+            width: 80%;
+            max-width: 500px;
+        }
+        textarea { width: 100%; height: 200px; margin-top: 10px; }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 99;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="control-panel">
+        <div>
+            <button class="btn btn-secondary" onclick="document.getElementById('file-input').click()">📂 설정 불러오기</button>
+            <input type="file" id="file-input" accept=".json" onchange="loadFromFile(this)">
+            <button class="btn btn-secondary" onclick="saveToFile()">💾 설정 저장하기</button>
+            <button class="btn btn-secondary" onclick="openEditModal()">✏️ 데이터 수정</button>
+        </div>
+        <div style="margin-top: 10px;">
+            <label for="flip-time">뒤집기 시간(초): </label>
+            <input type="number" id="flip-time" value="3" min="1" style="width: 50px;">
+            <button class="btn btn-primary" onclick="nextQuestion()">▶️ 시작 / 다음 질문</button>
+        </div>
+    </div>
+
+    <div class="card-container">
+        <div class="card" id="card">
+            <div class="card-face card-front">
+                <span class="category-badge" id="q-category">준비</span>
+                <h2 id="q-text">시작 버튼을 눌러주세요</h2>
+                <p style="color: #666; font-size: 0.9rem;">잠시 후 카드가 뒤집힙니다.</p>
+            </div>
+            <div class="card-face card-back">
+                <div class="timer" id="timer">00:00</div>
+                <div style="font-size: 1.1rem; font-weight: bold;">답변을 시작하세요!</div>
+                <div class="tail-questions">
+                    <strong>💡 예상 꼬리 질문:</strong>
+                    <ul id="q-tail" style="padding-left: 20px; margin: 5px 0;">
+                        <li>없음</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div id="data-modal">
+        <h3>면접 질문 데이터 (JSON)</h3>
+        <p>아래 형식을 맞춰 데이터를 수정하거나 추가하세요.</p>
+        <textarea id="json-editor"></textarea>
+        <div style="margin-top: 10px; text-align: right;">
+            <button class="btn btn-secondary" onclick="closeEditModal()">취소</button>
+            <button class="btn btn-primary" onclick="applyDataChange()">적용</button>
+        </div>
+    </div>
+
+    <script>
+        // 기본 데이터 (예시)
+        let interviewData = [
+            {
+                "id": 1,
+                "category": "자기소개",
+                "question": "1분 자기소개를 해보세요.",
+                "tailQuestions": ["자신의 강점을 실제 사례와 연결해 보세요.", "단점에 대해 설명해 보세요."]
+            },
+            {
+                "id": 2,
+                "category": "지원동기",
+                "question": "우리 회사에 지원한 구체적인 이유는 무엇인가요?",
+                "tailQuestions": ["경쟁사가 아닌 우리 회사여야 하는 이유는?", "직무와 관련된 본인의 경험은?"]
+            },
+            {
+                "id": 3,
+                "category": "인성",
+                "question": "동료와 갈등이 생겼을 때 어떻게 해결하셨나요?",
+                "tailQuestions": ["상사가 부당한 지시를 내린다면?", "스트레스는 어떻게 관리하나요?"]
+            }
+        ];
+
+        let currentTimer = null;
+        let secondsElapsed = 0;
+        let flipTimeout = null;
+
+        // --- 기능 구현 ---
+
+        function nextQuestion() {
+            // 1. 초기화
+            stopTimer();
+            const card = document.getElementById('card');
+            card.classList.remove('is-flipped'); // 앞면으로 복귀
+            
+            // 2. 랜덤 질문 뽑기
+            const randomIndex = Math.floor(Math.random() * interviewData.length);
+            const data = interviewData[randomIndex];
+
+            // 3. UI 업데이트 (앞면)
+            setTimeout(() => { // 카드가 돌아온 후 내용 변경
+                document.getElementById('q-category').innerText = data.category;
+                document.getElementById('q-text').innerText = data.question;
+                
+                // 뒷면 (꼬리질문) 업데이트
+                const tailList = document.getElementById('q-tail');
+                tailList.innerHTML = '';
+                if(data.tailQuestions && data.tailQuestions.length > 0) {
+                    data.tailQuestions.forEach(q => {
+                        const li = document.createElement('li');
+                        li.innerText = q;
+                        tailList.appendChild(li);
+                    });
+                } else {
+                    tailList.innerHTML = '<li>없음</li>';
+                }
+            }, 200);
+
+            // 4. 자동 뒤집기 로직
+            const flipTime = document.getElementById('flip-time').value * 1000;
+            
+            if(flipTimeout) clearTimeout(flipTimeout);
+            
+            flipTimeout = setTimeout(() => {
+                card.classList.add('is-flipped');
+                startTimer();
+            }, flipTime);
+        }
+
+        function startTimer() {
+            secondsElapsed = 0;
+            const timerEl = document.getElementById('timer');
+            timerEl.innerText = "00.00";
+            
+            if(currentTimer) clearInterval(currentTimer);
+            
+            const startTime = Date.now();
+            currentTimer = setInterval(() => {
+                const now = Date.now();
+                const diff = (now - startTime) / 1000;
+                timerEl.innerText = diff.toFixed(2);
+            }, 10);
+        }
+
+        function stopTimer() {
+            if(currentTimer) clearInterval(currentTimer);
+            if(flipTimeout) clearTimeout(flipTimeout);
+        }
+
+        // --- 파일 저장/불러오기 기능 ---
+
+        function saveToFile() {
+            const dataStr = JSON.stringify(interviewData, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "interview_questions.json";
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function loadFromFile(input) {
+            const file = input.files[0];
+            if(!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const json = JSON.parse(e.target.result);
+                    if(Array.isArray(json)) {
+                        interviewData = json;
+                        alert("설정 파일이 성공적으로 로드되었습니다!");
+                        // 데이터 에디터에도 반영
+                        document.getElementById('json-editor').value = JSON.stringify(interviewData, null, 2);
+                    } else {
+                        alert("올바른 JSON 형식이 아닙니다.");
+                    }
+                } catch(err) {
+                    alert("파일을 읽는 중 오류가 발생했습니다.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // --- 데이터 수정 모달 관련 ---
+        
+        function openEditModal() {
+            document.getElementById('json-editor').value = JSON.stringify(interviewData, null, 2);
+            document.getElementById('data-modal').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+
+        function closeEditModal() {
+            document.getElementById('data-modal').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        }
+
+        function applyDataChange() {
+            try {
+                const raw = document.getElementById('json-editor').value;
+                const parsed = JSON.parse(raw);
+                if(!Array.isArray(parsed)) throw new Error("배열 형식이 아닙니다.");
+                interviewData = parsed;
+                closeEditModal();
+                alert("데이터가 적용되었습니다.");
+            } catch(e) {
+                alert("JSON 형식이 올바르지 않습니다: " + e.message);
+            }
+        }
+
+    </script>
+</body>
+</html>
