@@ -18,7 +18,8 @@ const translations = {
         start_button: "Start / Next", category_ready: "Ready", question_ready: "Press the Start button",
         info_ready: "The card will flip shortly.", answer_start: "Start your answer!",
         tail_questions_title: "💡 Follow-up Questions:", no_tail_questions: "None", add_tail_question_title: "Add follow-up",
-        delete_question_title: "Delete question", confirm_delete: "Really delete this question and all its children?"
+        delete_question_title: "Delete question", confirm_delete: "Really delete this question and all its children?",
+        new_question_placeholder: "Enter new question.", new_tail_question_placeholder: "Enter new follow-up question."
     },
     ko: {
         editor_title: "질문 그래프 에디터", add_new_question: "새 질문 추가", load_settings: "설정 불러오기",
@@ -28,7 +29,8 @@ const translations = {
         start_button: "시작 / 다음 질문", category_ready: "준비", question_ready: "시작 버튼을 눌러주세요",
         info_ready: "잠시 후 카드가 뒤집힙니다.", answer_start: "답변을 시작하세요!",
         tail_questions_title: "💡 예상 꼬리 질문:", no_tail_questions: "없음", add_tail_question_title: "꼬리 질문 추가",
-        delete_question_title: "질문 삭제", confirm_delete: "정말로 이 질문과 모든 하위 질문을 삭제하시겠습니까?"
+        delete_question_title: "질문 삭제", confirm_delete: "정말로 이 질문과 모든 하위 질문을 삭제하시겠습니까?",
+        new_question_placeholder: "새로운 질문을 입력하세요.", new_tail_question_placeholder: "새로운 꼬리 질문을 입력하세요."
     }
 };
 
@@ -90,8 +92,8 @@ function renderNode(node, parentElement) {
     parentElement.appendChild(nodeItem);
 }
 function renderGraph() { document.getElementById('graph-editor').innerHTML = ''; interviewData.forEach(n => renderNode(n, document.getElementById('graph-editor'))); }
-function addRootQuestion() { interviewData.push({ id: `root-${Date.now()}`, category: "새 질문", question: "새로운 질문을 입력하세요.", children: [] }); renderGraph(); }
-function addChildQuestion(id) { const p = findNodeById(interviewData, id); if (p) { p.children = p.children || []; p.children.push({ id: `child-${Date.now()}`, question: "새로운 꼬리 질문을 입력하세요.", children: [] }); renderGraph(); } }
+function addRootQuestion() { interviewData.push({ id: `root-${Date.now()}`, category: "새 질문", question: translations[currentLanguage].new_question_placeholder, children: [] }); renderGraph(); }
+function addChildQuestion(id) { const p = findNodeById(interviewData, id); if (p) { p.children = p.children || []; p.children.push({ id: `child-${Date.now()}`, question: translations[currentLanguage].new_tail_question_placeholder, children: [] }); renderGraph(); } }
 function deleteQuestion(id) { if (confirm(translations[currentLanguage].confirm_delete)) { deleteNodeById(interviewData, id); renderGraph(); } }
 
 // --- 면접 카드 기능 ---
@@ -102,7 +104,8 @@ function nextQuestion() {
     card.classList.remove('is-flipped');
     const allQuestions = flattenData(interviewData);
     if (allQuestions.length === 0) {
-        setLanguage(currentLanguage);
+        document.getElementById('q-text').innerText = translations[currentLanguage].question_ready;
+        document.getElementById('q-category').innerText = translations[currentLanguage].category_ready;
         return;
     }
     const data = allQuestions[Math.floor(Math.random() * allQuestions.length)];
@@ -168,6 +171,7 @@ function initializeSettings() {
 function initializeResizer() {
     const resizer = document.getElementById('resizer');
     const editorPanel = document.getElementById('editor-panel');
+    const collapseBtn = document.getElementById('collapse-btn');
     let isResizing = false;
 
     const handleMouseMove = (e) => {
@@ -176,6 +180,8 @@ function initializeResizer() {
         if (newWidth < 250) newWidth = 250;
         if (newWidth > window.innerWidth * 0.8) newWidth = window.innerWidth * 0.8;
         editorPanel.style.flexBasis = `${newWidth}px`;
+        resizer.style.left = `${newWidth}px`;
+        collapseBtn.style.left = `${newWidth}px`;
     };
     const handleMouseUp = () => {
         isResizing = false;
@@ -188,9 +194,23 @@ function initializeResizer() {
 function initializeCollapser() {
     const collapseBtn = document.getElementById('collapse-btn');
     const editorPanel = document.getElementById('editor-panel');
+    const resizer = document.getElementById('resizer');
     collapseBtn.addEventListener('click', () => {
-        editorPanel.classList.toggle('collapsed');
+        const isCollapsed = editorPanel.classList.toggle('collapsed');
+        if (isCollapsed) {
+            collapseBtn.style.left = '-1px'; // Position just at the edge
+            resizer.style.display = 'none';
+        } else {
+            const currentWidth = editorPanel.getBoundingClientRect().width;
+            collapseBtn.style.left = `${currentWidth}px`;
+            resizer.style.display = 'block';
+            resizer.style.left = `${currentWidth}px`;
+        }
     });
+     // Set initial position
+    const initialWidth = editorPanel.getBoundingClientRect().width;
+    collapseBtn.style.left = `${initialWidth}px`;
+    resizer.style.left = `${initialWidth}px`;
 }
 
 // --- 앱 초기화 ---
@@ -199,5 +219,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderGraph();
     initializeResizer();
     initializeCollapser();
+    
     document.getElementById('card').addEventListener('click', nextQuestion);
 });
