@@ -430,12 +430,20 @@ function initializeResizer() {
 
 function initializeCollapser() {
     const collapseBtn = document.getElementById('collapse-btn');
+    const expandBtn = document.getElementById('expand-btn');
     const editorPanel = document.getElementById('editor-panel');
     const resizer = document.getElementById('resizer');
 
     collapseBtn.addEventListener('click', () => {
-        const isCollapsed = editorPanel.classList.toggle('collapsed');
-        resizer.style.display = isCollapsed ? 'none' : 'block';
+        editorPanel.classList.add('collapsed');
+        resizer.style.display = 'none';
+        expandBtn.style.display = 'flex';
+    });
+
+    expandBtn.addEventListener('click', () => {
+        editorPanel.classList.remove('collapsed');
+        resizer.style.display = 'block';
+        expandBtn.style.display = 'none';
     });
 }
 

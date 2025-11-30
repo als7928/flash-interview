@@ -43,24 +43,24 @@ body {
 
 /* --- 에디터 패널 --- */
 .editor-panel {
-    display: flex;
+    display: flex; /* Changed */
     flex-direction: column;
     height: 100%;
     background-color: var(--panel-bg);
     border-right: 1px solid var(--border-color);
     flex-shrink: 0;
     flex-basis: 450px;
-    min-width: 50px; /* Set a minimum width */
+    min-width: 0; /* Changed */
     transition: flex-basis 0.4s ease, min-width 0.4s ease;
     position: relative;
-    overflow: hidden; /* Changed from visible */
+    overflow: hidden;
 }
 .editor-content-wrapper { 
     display: flex; 
-    flex-direction: column; 
-    flex-grow: 1; /* Changed */
-    height: 100%; /* Changed */
-    overflow: hidden;
+    flex-direction: column;
+    width: 100%; 
+    height: 100%; 
+    min-height: 0;
     transition: opacity 0.2s ease-in-out;
 }
 .editor-header { 
@@ -71,11 +71,15 @@ body {
     justify-content: space-between;
     align-items: center;
 }
+.editor-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
 #graph-editor { 
     flex-grow: 1; 
     overflow-y: auto; 
     padding: 16px; 
-    min-height: 0; /* Added for flex scrolling */
 }
 .editor-footer { 
     padding: 12px; 
@@ -83,37 +87,44 @@ body {
     flex-shrink: 0; 
     display: flex; 
     flex-direction: column; 
-    gap: 12px; 
+    gap: 12px;
+    box-shadow: 0 -4px 12px -4px var(--shadow-color-light);
 }
 .settings-group { 
     display: flex; 
-    justify-content: space-between; /* Changed */
+    justify-content: space-between; 
     align-items: center; 
     gap: 10px; 
 }
 
-/* --- 접기 버튼 & 리사이저 --- */
-.collapse-btn {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    z-index: 10;
+/* --- 접기/펼치기 버튼 & 리사이저 --- */
+.collapse-btn, .expand-btn {
     padding: 0;
     width: 36px;
     height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--panel-bg);
-    border: 1px solid var(--border-color);
+    background: none;
+    border: 1px solid transparent;
     border-radius: var(--border-radius-md);
     cursor: pointer;
     transition: all 0.2s ease;
 }
-.collapse-btn:hover { 
-    background-color: var(--input-bg); 
+.collapse-btn {
+    position: relative;
 }
-.collapse-btn svg { 
+.expand-btn {
+    position: absolute;
+    top: 8px;
+    left: 7px;
+    z-index: 25;
+}
+.collapse-btn:hover, .expand-btn:hover { 
+    background-color: var(--input-bg); 
+    border-color: var(--border-color);
+}
+.collapse-btn svg, .expand-btn svg { 
     width: 24px; 
     height: 24px; 
     fill: var(--text-color); 
@@ -121,14 +132,13 @@ body {
 }
 
 .editor-panel.collapsed {
-    flex-basis: 50px;
+    flex-basis: 0;
+    min-width: 0;
+    border-width: 0;
 }
 .editor-panel.collapsed .editor-content-wrapper {
     opacity: 0;
     pointer-events: none;
-}
-.editor-panel.collapsed .collapse-btn svg { 
-    transform: rotate(180deg); 
 }
 
 .resizer { 
@@ -189,7 +199,11 @@ body {
 .order-mode-group label:not(:has(+ input:checked)):hover {
     background-color: var(--input-bg);
 }
-
+.btn svg {
+    vertical-align: middle;
+    margin-right: 8px;
+    fill: currentColor;
+}
 .flip-timer-animation {
     position: absolute;
     top: 0;
