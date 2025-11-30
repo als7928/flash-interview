@@ -24,7 +24,6 @@ const translations = {
         new_question_category: "New Question",
         order_mode_label: "Order:",
         order_random: "Random",
-        order_follow_up: "Follow-up",
         order_dfs: "In Order",
     },
     ko: {
@@ -40,7 +39,6 @@ const translations = {
         new_question_category: "새 질문",
         order_mode_label: "질문 순서:",
         order_random: "랜덤",
-        order_follow_up: "꼬리 질문 우선",
         order_dfs: "순서대로",
     }
 };
@@ -198,21 +196,14 @@ function nextQuestion() {
         return;
     }
 
-    if (orderMode === 'follow-up' && activeQuestionId) {
-        const currentNode = findNodeById(interviewData, activeQuestionId);
-        if (currentNode && currentNode.children && currentNode.children.length > 0) {
-            data = currentNode.children[Math.floor(Math.random() * currentNode.children.length)];
-        }
-    } else if (orderMode === 'dfs') {
+    if (orderMode === 'dfs') {
         if (dfsCurrentIndex >= dfsOrderedQuestions.length - 1) {
             dfsCurrentIndex = 0; // Loop back to the start
         } else {
             dfsCurrentIndex++;
         }
         data = dfsOrderedQuestions[dfsCurrentIndex];
-    }
-    
-    if (!data) { // Fallback to random
+    } else { // random mode
         const allQuestions = flattenData(interviewData);
         data = allQuestions[Math.floor(Math.random() * allQuestions.length)];
     }
@@ -266,8 +257,7 @@ function startTimer() {
         const diff = (Date.now() - startTime) / 1000;
         timerEl.innerText = diff.toFixed(2);
         if (diff >= maxTime) {
-            stopTimer();
-            document.getElementById('card').classList.remove('is-flipped');
+            nextQuestion();
         }
     }, 10);
 }
