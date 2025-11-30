@@ -92,15 +92,25 @@ function renderNode(node, parentElement) {
         autoResizeTextarea(textarea);
         node.question = textarea.value; // 실시간 데이터 업데이트
     });
-    // 초기 로드 시 높이 조절
+    
+    // 비동기적으로 높이를 조절해야 초기 렌더링 시 정확한 높이를 계산할 수 있습니다.
     setTimeout(() => autoResizeTextarea(textarea), 0);
 
     const actions = document.createElement('div');
     actions.className = 'node-actions';
-    actions.innerHTML = `
-        <button class="btn btn-primary btn-sm" onclick="addChildQuestion('${node.id}')">+</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteQuestion('${node.id}')">-</button>
-    `;
+    
+    const addChildBtn = document.createElement('button');
+    addChildBtn.className = 'btn btn-primary btn-sm';
+    addChildBtn.textContent = '+';
+    addChildBtn.addEventListener('click', () => addChildQuestion(node.id));
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn btn-danger btn-sm';
+    deleteBtn.textContent = '-';
+    deleteBtn.addEventListener('click', () => deleteQuestion(node.id));
+
+    actions.appendChild(addChildBtn);
+    actions.appendChild(deleteBtn);
 
     nodeMain.appendChild(textarea);
     nodeMain.appendChild(actions);
