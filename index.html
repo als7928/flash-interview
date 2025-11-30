@@ -12,7 +12,10 @@
         <div class="editor-panel" id="editor-panel">
             <div class="editor-content-wrapper">
                 <div class="editor-header">
-                    <h3 data-i18n="editor_title">질문 그래프 에디터</h3>
+                    <button class="collapse-btn" id="collapse-btn" title="에디터 접기">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                    </button>
+                    <h3 data-i18n="editor_title">질문 에디터</h3>
                     <button id="add-root-btn" class="btn btn-primary" onclick="addRootQuestion()" data-i18n="add_new_question">새 질문 추가</button>
                 </div>
                 <div id="graph-editor">
@@ -44,10 +47,6 @@
 
         <div class="resizer" id="resizer"></div>
 
-        <button class="collapse-btn" id="collapse-btn" title="에디터 접기">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
-        </button>
-
         <!-- 오른쪽: 면접 카드 영역 -->
         <div class="interview-panel">
             <div class="control-panel">
@@ -55,7 +54,7 @@
                     <label for="flip-time" data-i18n="flip_time_label">뒤집기 시간(초): </label>
                     <input type="number" id="flip-time" value="3" min="1" style="width: 50px;">
                     <label for="max-answer-time" data-i18n="max_answer_time_label">최대 답변 시간(초): </label>
-                    <input type="number" id="max-answer-time" value="60" min="1" style="width: 50px;">
+                    <input type="number" id="max-answer-time" value="30" min="1" style="width: 50px;">
                 </div>
                 <div class="control-group">
                     <label data-i18n="order_mode_label">질문 순서:</label>

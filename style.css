@@ -55,40 +55,73 @@ body {
     position: relative; /* For child positioning */
     overflow: visible; /* CRITICAL FIX: Allows button to be seen */
 }
-.editor-content-wrapper { display: flex; flex-direction: column; width: 100%; height: 100%; overflow: hidden; }
-.editor-header { padding: 16px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; }
-#graph-editor { flex-grow: 1; overflow-y: auto; padding: 16px; }
-.editor-footer { padding: 12px; border-top: 1px solid var(--border-color); flex-shrink: 0; display: flex; flex-direction: column; gap: 12px; }
-.settings-group { display: flex; justify-content: space-around; align-items: center; gap: 10px; }
-select { background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); padding: 6px 8px; }
-
-/* 접기 버튼 & 리사이저 */
-.collapse-btn {
-    position: absolute;
-    top: 50%;
-    right: -24px; /* Position relative to the panel's right edge */
-    transform: translateY(-50%);
-    width: 24px; height: 70px;
-    background-color: var(--panel-bg);
-    border: 1px solid var(--border-color);
-    border-left: none;
-    border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;
-    cursor: pointer;
-    z-index: 20;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.3s ease;
-    box-shadow: 2px 0 5px var(--shadow-color-light);
+.editor-content-wrapper { 
+    display: flex; 
+    flex-direction: column; 
+    width: 100%; 
+    height: 100%; 
+    overflow: hidden;
+    transition: opacity 0.3s ease-in-out;
 }
-.collapse-btn:hover { background-color: var(--input-bg); }
-.collapse-btn svg { width: 22px; height: 22px; fill: var(--text-color); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
+.editor-header { 
+    padding: 12px; 
+    border-bottom: 1px solid var(--border-color); 
+    flex-shrink: 0; 
+    display: flex; 
+    justify-content: flex-start; /* Changed */
+    align-items: center;
+    gap: 10px; /* Added */
+}
 
-.editor-panel.collapsed { flex-basis: 0;
-    min-width: 0;
-    border-right-color: transparent; }
-.editor-panel.collapsed .collapse-btn { right: -25px; } /* Push it out slightly more */
-.editor-panel.collapsed .collapse-btn svg { transform: rotate(180deg); }
+/* --- 접기 버튼 & 리사이저 --- */
+.collapse-btn {
+    order: -1; /* Place it first */
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.collapse-btn:hover { 
+    background-color: var(--input-bg); 
+    border-color: var(--border-color);
+}
+.collapse-btn svg { 
+    width: 24px; 
+    height: 24px; 
+    fill: var(--text-color); 
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); 
+}
 
-.resizer { position: absolute; top: 0; right: 0; height: 100%; width: 4px; cursor: col-resize; background-color: transparent; z-index: 15; transition: background-color 0.2s; }
+.editor-panel.collapsed {
+    flex-basis: 50px;
+    min-width: 50px;
+}
+.editor-panel.collapsed .editor-content-wrapper {
+    opacity: 0;
+    pointer-events: none;
+}
+.editor-panel.collapsed .collapse-btn svg { 
+    transform: rotate(180deg); 
+}
+
+.resizer { 
+    position: absolute; 
+    top: 0; 
+    right: -2px; /* Adjusted position */
+    height: 100%; 
+    width: 4px; 
+    cursor: col-resize; 
+    background-color: transparent; 
+    z-index: 15; 
+    transition: background-color 0.2s; 
+}
 .resizer:hover { background-color: var(--primary-color); }
 
 /* --- 인터뷰 패널 --- */
@@ -163,7 +196,16 @@ select { background-color: var(--input-bg); color: var(--text-color); border: 1p
 .category-badge { background: var(--primary-color); color: white; padding: 8px 16px; border-radius: 30px; font-size: 0.9rem; margin-bottom: 15px; font-weight: 500; }
 h2 { margin: 0 0 10px 0; font-size: 1.8rem; font-weight: 600; word-break: keep-all; }
 .timer { font-size: 3.5rem; font-weight: 700; margin-bottom: 10px; color: #f1c40f; }
-.node-item { border: 2px solid transparent; border-radius: var(--border-radius-md); padding: 8px; margin-bottom: 8px; transition: all 0.3s; }
+.node-item { 
+    border: 2px solid transparent; 
+    border-radius: var(--border-radius-md); 
+    padding: 8px; 
+    margin-bottom: 8px; 
+    transition: all 0.3s; 
+}
+.node-item:hover { /* Added hover effect */
+    background-color: var(--input-bg);
+}
 .node-item.is-active { border-color: var(--primary-color); background-color: var(--input-bg); box-shadow: 0 0 12px var(--highlight-color-glow); }
 .node-main { display: flex; align-items: center; gap: 8px; }
 .node-main textarea { flex-grow: 1; border: 1px solid var(--border-color); background-color: var(--input-bg); color: var(--text-color); border-radius: var(--border-radius-sm); padding: 12px; font-family: inherit; font-size: 0.95rem; resize: none; overflow-y: hidden; transition: all 0.3s; }

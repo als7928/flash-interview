@@ -12,7 +12,7 @@ let dfsOrderedQuestions = [], dfsCurrentIndex = -1;
 // --- 번역 데이터 ---
 const translations = {
     en: {
-        editor_title: "Question Graph Editor", add_new_question: "Add New Question", load_settings: "Load Settings",
+        editor_title: "Question Editor", add_new_question: "Add New Question", load_settings: "Load Settings",
         save_settings: "Save Settings", language_label: "Language:", theme_label: "Theme:", lang_system: "System",
         theme_system: "System", theme_light: "Light", theme_dark: "Dark", flip_time_label: "Flip Time (s):",
         max_answer_time_label: "Max Answer Time (s):",
@@ -27,7 +27,7 @@ const translations = {
         order_dfs: "In Order",
     },
     ko: {
-        editor_title: "질문 그래프 에디터", add_new_question: "새 질문 추가", load_settings: "설정 불러오기",
+        editor_title: "질문 에디터", add_new_question: "새 질문 추가", load_settings: "설정 불러오기",
         save_settings: "설정 저장하기", language_label: "언어:", theme_label: "테마:", lang_system: "시스템",
         theme_system: "시스템", theme_light: "라이트", theme_dark: "다크", flip_time_label: "뒤집기 시간(초):",
         max_answer_time_label: "최대 답변 시간(초):",
@@ -405,46 +405,38 @@ function initializeSettings() {
 function initializeResizer() {
     const resizer = document.getElementById('resizer');
     const editorPanel = document.getElementById('editor-panel');
-    const collapseBtn = document.getElementById('collapse-btn');
     let isResizing = false;
 
-    const handleMouseMove = (e) => {
+    resizer.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+    });
+
+    function handleMouseMove(e) {
         if (!isResizing) return;
         let newWidth = e.clientX;
-        if (newWidth < 250) newWidth = 250;
+        if (newWidth < 50) newWidth = 50; // Minimum collapsed width
         if (newWidth > window.innerWidth * 0.8) newWidth = window.innerWidth * 0.8;
         editorPanel.style.flexBasis = `${newWidth}px`;
-        resizer.style.left = `${newWidth}px`;
-        collapseBtn.style.left = `${newWidth}px`;
-    };
-    const handleMouseUp = () => {
+    }
+
+    function handleMouseUp() {
         isResizing = false;
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
-    };
-    resizer.addEventListener('mousedown', () => { isResizing = true; document.addEventListener('mousemove', handleMouseMove); document.addEventListener('mouseup', handleMouseUp); });
+    }
 }
 
 function initializeCollapser() {
     const collapseBtn = document.getElementById('collapse-btn');
     const editorPanel = document.getElementById('editor-panel');
     const resizer = document.getElementById('resizer');
+
     collapseBtn.addEventListener('click', () => {
         const isCollapsed = editorPanel.classList.toggle('collapsed');
-        if (isCollapsed) {
-            collapseBtn.style.left = '-1px'; // Position just at the edge
-            resizer.style.display = 'none';
-        } else {
-            const currentWidth = editorPanel.getBoundingClientRect().width;
-            collapseBtn.style.left = `${currentWidth}px`;
-            resizer.style.display = 'block';
-            resizer.style.left = `${currentWidth}px`;
-        }
+        resizer.style.display = isCollapsed ? 'none' : 'block';
     });
-     // Set initial position
-    const initialWidth = editorPanel.getBoundingClientRect().width;
-    collapseBtn.style.left = `${initialWidth}px`;
-    resizer.style.left = `${initialWidth}px`;
 }
 
 // --- 앱 초기화 ---
