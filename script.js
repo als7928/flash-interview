@@ -208,6 +208,11 @@ function nextQuestion() {
         data = allQuestions[Math.floor(Math.random() * allQuestions.length)];
     }
     
+    if (!data) { // Fallback to random, in case dfs array is empty
+        const allQuestions = flattenData(interviewData);
+        data = allQuestions[Math.floor(Math.random() * allQuestions.length)];
+    }
+    
     activeQuestionId = data.id;
     // Update DFS index for consistency
     dfsCurrentIndex = dfsOrderedQuestions.findIndex(q => q.id === data.id);
