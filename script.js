@@ -1,10 +1,10 @@
 // --- 초기 데이터 및 상태 변수 ---
 let interviewData = [
-    { "id": "root-1", "category": "기본 질문", "question": "1분 자기소개를 해보세요.", "children": [
+    { "id": "root-1", "question": "1분 자기소개를 해보세요.", "children": [
             { "id": "child-1-1", "question": "자신의 가장 큰 강점은 무엇인가요?", "children": [] },
             { "id": "child-1-2", "question": "어떤 단점을 가지고 있으며, 어떻게 개선하고 있나요?", "children": [] }
     ]},
-    { "id": "root-2", "category": "지원 동기", "question": "우리 회사에 지원한 이유는 무엇인가요?", "children": [] }
+    { "id": "root-2", "question": "우리 회사에 지원한 이유는 무엇인가요?", "children": [] }
 ];
 let currentTimer = null, flipTimeout = null, activeQuestionId = null, currentLanguage = 'ko';
 let dfsOrderedQuestions = [], dfsCurrentIndex = -1;
@@ -12,11 +12,11 @@ let dfsOrderedQuestions = [], dfsCurrentIndex = -1;
 // --- 번역 데이터 ---
 const translations = {
     en: {
-        editor_title: "Question Editor", add_new_question: "Add New Question", load_settings: "Load Settings",
-        save_settings: "Save Settings", language_label: "Language:", theme_label: "Theme:", lang_system: "System",
+        editor_title: "Question Editor", add_new_question: "Add New Question", load_settings: "Import",
+        save_settings: "Export", language_label: "Language:", theme_label: "Theme:", lang_system: "System",
         theme_system: "System", theme_light: "Light", theme_dark: "Dark", flip_time_label: "Flip Time (s):",
         max_answer_time_label: "Max Answer Time (s):",
-        start_button: "Start / Next", category_ready: "Ready", question_ready: "Press the Start button",
+        start_button: "Start / Next", question_ready: "Press the Start button",
         info_ready: "The card will flip shortly.", answer_start: "Start your answer!",
         tail_questions_title: "💡 Follow-up Questions:", no_tail_questions: "None", add_tail_question_title: "Add follow-up",
         delete_question_title: "Delete question", confirm_delete: "Really delete this question and all its children?",
@@ -31,7 +31,7 @@ const translations = {
         save_settings: "설정 저장하기", language_label: "언어:", theme_label: "테마:", lang_system: "시스템",
         theme_system: "시스템", theme_light: "라이트", theme_dark: "다크", flip_time_label: "뒤집기 시간(초):",
         max_answer_time_label: "최대 답변 시간(초):",
-        start_button: "시작 / 다음 질문", category_ready: "준비", question_ready: "시작 버튼을 눌러주세요",
+        start_button: "시작 / 다음 질문", question_ready: "시작 버튼을 눌러주세요",
         info_ready: "잠시 후 카드가 뒤집힙니다.", answer_start: "답변을 시작하세요!",
         tail_questions_title: "💡 예상 꼬리 질문:", no_tail_questions: "없음", add_tail_question_title: "꼬리 질문 추가",
         delete_question_title: "질문 삭제", confirm_delete: "정말로 이 질문과 모든 하위 질문을 삭제하시겠습니까?",
@@ -240,7 +240,7 @@ function renderGraph() {
     generateDfsOrder();
 }
 function addRootQuestion() { 
-    interviewData.push({ id: `root-${Date.now()}`, category: translations[currentLanguage].new_question_category, question: '', children: [] }); 
+    interviewData.push({ id: `root-${Date.now()}`, question: '', children: [] }); 
     renderGraph(); 
 }
 function addChildQuestion(id) { 
@@ -283,12 +283,6 @@ function showQuestion(id) {
     card.classList.remove('is-flipped');
 
     setTimeout(() => {
-        let category = "꼬리 질문";
-        const rootParent = interviewData.find(root => findNodeById([root], data.id));
-        if (rootParent) {
-            category = rootParent.id === data.id ? (rootParent.category || "기본 질문") : (rootParent.category + "의 꼬리질문");
-        }
-        document.getElementById('q-category').innerText = category;
         document.getElementById('q-text').innerText = data.question;
         const tailList = document.getElementById('q-tail');
         tailList.innerHTML = (data.children && data.children.length > 0) ? data.children.map(q => `<li>${q.question}</li>`).join('') : `<li>${translations[currentLanguage].no_tail_questions}</li>`;
@@ -306,7 +300,6 @@ function nextQuestion() {
 
     if (interviewData.length === 0) {
         document.getElementById('q-text').innerText = translations[currentLanguage].question_ready;
-        document.getElementById('q-category').innerText = translations[currentLanguage].category_ready;
         return;
     }
 
@@ -336,12 +329,6 @@ function nextQuestion() {
         activeNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     setTimeout(() => {
-        let category = "꼬리 질문";
-        const rootParent = interviewData.find(root => findNodeById([root], data.id));
-        if (rootParent) {
-            category = rootParent.id === data.id ? (rootParent.category || "기본 질문") : (rootParent.category + "의 꼬리질문");
-        }
-        document.getElementById('q-category').innerText = category;
         document.getElementById('q-text').innerText = data.question;
         const tailList = document.getElementById('q-tail');
         tailList.innerHTML = (data.children && data.children.length > 0) ? data.children.map(q => `<li>${q.question}</li>`).join('') : `<li>${translations[currentLanguage].no_tail_questions}</li>`;
