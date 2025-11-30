@@ -51,20 +51,30 @@
         <!-- 오른쪽: 면접 카드 영역 -->
         <div class="interview-panel">
             <div class="control-panel">
-                <label for="flip-time" data-i18n="flip_time_label">뒤집기 시간(초): </label>
-                <input type="number" id="flip-time" value="3" min="1" style="width: 50px;">
-                <label for="max-answer-time" data-i18n="max_answer_time_label">최대 답변 시간(초): </label>
-                <input type="number" id="max-answer-time" value="60" min="1" style="width: 50px;">
-                <button id="start-btn" class="btn btn-primary" onclick="nextQuestion()" data-i18n="start_button">시작 / 다음 질문</button>
-                <div class="settings-group" style="margin-left: 20px;">
-                    <input type="checkbox" id="follow-up-mode">
-                    <label for="follow-up-mode" data-i18n="follow_up_mode_label">꼬리 질문 우선</label>
+                <div class="control-group">
+                    <label for="flip-time" data-i18n="flip_time_label">뒤집기 시간(초): </label>
+                    <input type="number" id="flip-time" value="3" min="1" style="width: 50px;">
+                    <label for="max-answer-time" data-i18n="max_answer_time_label">최대 답변 시간(초): </label>
+                    <input type="number" id="max-answer-time" value="60" min="1" style="width: 50px;">
                 </div>
+                <div class="control-group">
+                    <label data-i18n="order_mode_label">질문 순서:</label>
+                    <div class="order-mode-group">
+                        <input type="radio" id="order-random" name="order-mode" value="random" checked>
+                        <label for="order-random" data-i18n="order_random">랜덤</label>
+                        <input type="radio" id="order-follow-up" name="order-mode" value="follow-up">
+                        <label for="order-follow-up" data-i18n="order_follow_up">꼬리 질문 우선</label>
+                        <input type="radio" id="order-dfs" name="order-mode" value="dfs">
+                        <label for="order-dfs" data-i18n="order_dfs">순서대로</label>
+                    </div>
+                </div>
+                <button id="start-btn" class="btn btn-primary" onclick="nextQuestion()" data-i18n="start_button">시작 / 다음 질문</button>
             </div>
 
             <div class="card-container">
                 <div class="card" id="card">
                     <div class="card-face card-front">
+                        <div class="flip-timer-animation" id="flip-timer-animation"></div>
                         <span class="category-badge" id="q-category" data-i18n="category_ready">준비</span>
                         <h2 id="q-text" data-i18n="question_ready">시작 버튼을 눌러주세요</h2>
                         <p style="color: #666; font-size: 0.9rem;" data-i18n="info_ready">잠시 후 카드가 뒤집힙니다.</p>

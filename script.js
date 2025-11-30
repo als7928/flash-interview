@@ -7,6 +7,7 @@ let interviewData = [
     { "id": "root-2", "category": "지원 동기", "question": "우리 회사에 지원한 이유는 무엇인가요?", "children": [] }
 ];
 let currentTimer = null, flipTimeout = null, activeQuestionId = null, currentLanguage = 'ko';
+let dfsOrderedQuestions = [], dfsCurrentIndex = 0;
 
 // --- 번역 데이터 ---
 const translations = {
@@ -21,7 +22,10 @@ const translations = {
         delete_question_title: "Delete question", confirm_delete: "Really delete this question and all its children?",
         new_question_placeholder: "Enter new question.", new_tail_question_placeholder: "Enter new follow-up question.",
         new_question_category: "New Question",
-        follow_up_mode_label: "Prioritize follow-up questions"
+        order_mode_label: "Order:",
+        order_random: "Random",
+        order_follow_up: "Follow-up",
+        order_dfs: "In Order",
     },
     ko: {
         editor_title: "질문 그래프 에디터", add_new_question: "새 질문 추가", load_settings: "설정 불러오기",
@@ -34,7 +38,10 @@ const translations = {
         delete_question_title: "질문 삭제", confirm_delete: "정말로 이 질문과 모든 하위 질문을 삭제하시겠습니까?",
         new_question_placeholder: "새로운 질문을 입력하세요.", new_tail_question_placeholder: "새로운 꼬리 질문을 입력하세요.",
         new_question_category: "새 질문",
-        follow_up_mode_label: "꼬리 질문 우선"
+        order_mode_label: "질문 순서:",
+        order_random: "랜덤",
+        order_follow_up: "꼬리 질문 우선",
+        order_dfs: "순서대로",
     }
 };
 
@@ -43,14 +50,13 @@ function setLanguage(lang) {
     currentLanguage = lang === 'system' ? ((navigator.language || navigator.userLanguage).startsWith('ko') ? 'ko' : 'en') : lang;
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        if (translations[currentLanguage][key]) {
+        if (translations[currentLanguage] && translations[currentLanguage][key]) {
             el.title = ''; // Clear title first
             if (el.tagName === 'BUTTON' && el.textContent.trim().length === 0) { // Icon-only buttons
                 el.title = translations[currentLanguage][key];
             } else if (el.hasAttribute('placeholder')) {
                 el.placeholder = translations[currentLanguage][key];
-            }
-            else {
+            } else {
                 el.textContent = translations[currentLanguage][key];
             }
         }
@@ -61,6 +67,18 @@ function flattenData(nodes) { return nodes.reduce((acc, node) => { acc.push(node
 function findNodeById(nodes, id) { for (const node of nodes) { if (node.id === id) return node; if (node.children) { const found = findNodeById(node.children, id); if (found) return found; } } return null; }
 function deleteNodeById(nodes, id) { for (let i = 0; i < nodes.length; i++) { if (nodes[i].id === id) { nodes.splice(i, 1); return true; } if (nodes[i].children && deleteNodeById(nodes[i].children, id)) return true; } return false; }
 function autoResizeTextarea(textarea) { textarea.style.height = 'auto'; textarea.style.height = textarea.scrollHeight + 'px'; }
+
+function generateDfsOrder() {
+    dfsOrderedQuestions = [];
+    const dfs = (node) => {
+        dfsOrderedQuestions.push(node);
+        if (node.children) {
+            node.children.forEach(dfs);
+        }
+    };
+    interviewData.forEach(dfs);
+    dfsCurrentIndex = 0;
+}
 
 // --- 그래프 에디터 ---
 function renderNode(node, parentElement) {
@@ -76,7 +94,7 @@ function renderNode(node, parentElement) {
     textarea.placeholder = isRoot 
         ? translations[currentLanguage].new_question_placeholder
         : translations[currentLanguage].new_tail_question_placeholder;
-    textarea.addEventListener('input', () => { autoResizeTextarea(textarea); node.question = textarea.value; });
+    textarea.addEventListener('input', () => { autoResizeTextarea(textarea); node.question = textarea.value; generateDfsOrder(); });
     textarea.addEventListener('click', () => showQuestion(node.id));
     setTimeout(() => autoResizeTextarea(textarea), 0);
     const actions = document.createElement('div');
@@ -104,10 +122,29 @@ function renderNode(node, parentElement) {
     }
     parentElement.appendChild(nodeItem);
 }
-function renderGraph() { document.getElementById('graph-editor').innerHTML = ''; interviewData.forEach(n => renderNode(n, document.getElementById('graph-editor'))); }
-function addRootQuestion() { interviewData.push({ id: `root-${Date.now()}`, category: translations[currentLanguage].new_question_category, question: '', children: [] }); renderGraph(); }
-function addChildQuestion(id) { const p = findNodeById(interviewData, id); if (p) { p.children = p.children || []; p.children.push({ id: `child-${Date.now()}`, question: '', children: [] }); renderGraph(); } }
-function deleteQuestion(id) { if (confirm(translations[currentLanguage].confirm_delete)) { deleteNodeById(interviewData, id); renderGraph(); } }
+function renderGraph() { 
+    document.getElementById('graph-editor').innerHTML = ''; 
+    interviewData.forEach(n => renderNode(n, document.getElementById('graph-editor')));
+    generateDfsOrder();
+}
+function addRootQuestion() { 
+    interviewData.push({ id: `root-${Date.now()}`, category: translations[currentLanguage].new_question_category, question: '', children: [] }); 
+    renderGraph(); 
+}
+function addChildQuestion(id) { 
+    const p = findNodeById(interviewData, id); 
+    if (p) { 
+        p.children = p.children || []; 
+        p.children.push({ id: `child-${Date.now()}`, question: '', children: [] }); 
+        renderGraph(); 
+    } 
+}
+function deleteQuestion(id) { 
+    if (confirm(translations[currentLanguage].confirm_delete)) { 
+        deleteNodeById(interviewData, id); 
+        renderGraph(); 
+    } 
+}
 
 // --- 면접 카드 기능 ---
 function showQuestion(id) {
@@ -119,6 +156,9 @@ function showQuestion(id) {
 
     const data = findNodeById(interviewData, id);
     if (!data) return;
+    
+    // Update DFS index
+    dfsCurrentIndex = dfsOrderedQuestions.findIndex(q => q.id === id);
 
     activeQuestionId = data.id;
     const activeNode = document.querySelector(`.node-item[data-id="${activeQuestionId}"]`);
@@ -149,27 +189,38 @@ function nextQuestion() {
     const card = document.getElementById('card');
     card.classList.remove('is-flipped');
 
-    const followUpMode = document.getElementById('follow-up-mode').checked;
+    const orderMode = document.querySelector('input[name="order-mode"]:checked').value;
     let data;
 
-    if (followUpMode && activeQuestionId) {
+    if (interviewData.length === 0) {
+        document.getElementById('q-text').innerText = translations[currentLanguage].question_ready;
+        document.getElementById('q-category').innerText = translations[currentLanguage].category_ready;
+        return;
+    }
+
+    if (orderMode === 'follow-up' && activeQuestionId) {
         const currentNode = findNodeById(interviewData, activeQuestionId);
         if (currentNode && currentNode.children && currentNode.children.length > 0) {
             data = currentNode.children[Math.floor(Math.random() * currentNode.children.length)];
         }
-    }
-
-    if (!data) {
-        const allQuestions = flattenData(interviewData);
-        if (allQuestions.length === 0) {
-            document.getElementById('q-text').innerText = translations[currentLanguage].question_ready;
-            document.getElementById('q-category').innerText = translations[currentLanguage].category_ready;
-            return;
+    } else if (orderMode === 'dfs') {
+        if (dfsCurrentIndex >= dfsOrderedQuestions.length - 1) {
+            dfsCurrentIndex = 0; // Loop back to the start
+        } else {
+            dfsCurrentIndex++;
         }
+        data = dfsOrderedQuestions[dfsCurrentIndex];
+    }
+    
+    if (!data) { // Fallback to random
+        const allQuestions = flattenData(interviewData);
         data = allQuestions[Math.floor(Math.random() * allQuestions.length)];
     }
     
     activeQuestionId = data.id;
+    // Update DFS index for consistency
+    dfsCurrentIndex = dfsOrderedQuestions.findIndex(q => q.id === data.id);
+
     const activeNode = document.querySelector(`.node-item[data-id="${activeQuestionId}"]`);
     if (activeNode) {
         activeNode.classList.add('is-active');
@@ -185,11 +236,25 @@ function nextQuestion() {
         document.getElementById('q-text').innerText = data.question;
         const tailList = document.getElementById('q-tail');
         tailList.innerHTML = (data.children && data.children.length > 0) ? data.children.map(q => `<li>${q.question}</li>`).join('') : `<li>${translations[currentLanguage].no_tail_questions}</li>`;
+        
+        const flipTime = document.getElementById('flip-time').value;
+        const timerEl = document.getElementById('flip-timer-animation');
+        timerEl.style.transition = 'none';
+        timerEl.style.transform = 'scaleX(1)';
+        
+        // Force a reflow before applying the transition
+        void timerEl.offsetWidth;
+
+        timerEl.style.transition = `transform ${flipTime}s linear`;
+        timerEl.style.transform = 'scaleX(0)';
+
     }, 200);
-    const flipTime = document.getElementById('flip-time').value * 1000;
+
+    const flipTimeMs = document.getElementById('flip-time').value * 1000;
     if (flipTimeout) clearTimeout(flipTimeout);
-    flipTimeout = setTimeout(() => { card.classList.add('is-flipped'); startTimer(); }, flipTime);
+    flipTimeout = setTimeout(() => { card.classList.add('is-flipped'); startTimer(); }, flipTimeMs);
 }
+
 function startTimer() {
     const timerEl = document.getElementById('timer');
     const maxTime = parseInt(document.getElementById('max-answer-time').value, 10);
@@ -206,11 +271,20 @@ function startTimer() {
         }
     }, 10);
 }
-function stopTimer() { if (currentTimer) clearInterval(currentTimer); if (flipTimeout) clearTimeout(flipTimeout) }
+
+function stopTimer() { 
+    if (currentTimer) clearInterval(currentTimer); 
+    if (flipTimeout) clearTimeout(flipTimeout);
+    const timerEl = document.getElementById('flip-timer-animation');
+    if (timerEl) {
+        timerEl.style.transition = 'none';
+        timerEl.style.transform = 'scaleX(0)';
+    }
+}
 
 // --- 파일 저장/불러오기 ---
 function saveToFile() { const d = JSON.stringify(interviewData, null, 2), b = new Blob([d], { type: "application/json" }), a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "interview_questions.json"; a.click(); URL.revokeObjectURL(a.href) }
-function loadFromFile(i) { const f = i.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => { try { const j = JSON.parse(e.target.result); if (Array.isArray(j)) { interviewData = j; setLanguage(localStorage.getItem('language')||'system'); alert("설정 파일이 성공적으로 로드되었습니다!") } else alert("올바른 JSON 형식이 아닙니다.") } catch (err) { alert("파일을 읽는 중 오류가 발생했습니다: " + err.message) } }; r.readAsText(f) }
+function loadFromFile(i) { const f = i.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => { try { const j = JSON.parse(e.target.result); if (Array.isArray(j)) { interviewData = j; setLanguage(localStorage.getItem('language')||'system'); generateDfsOrder(); alert("설정 파일이 성공적으로 로드되었습니다!") } else alert("올바른 JSON 형식이 아닙니다.") } catch (err) { alert("파일을 읽는 중 오류가 발생했습니다: " + err.message) } }; r.readAsText(f) }
 
 // --- UI 상호작용 초기화 ---
 function initializeSettings() {
@@ -283,7 +357,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('card').addEventListener('click', () => {
         const card = document.getElementById('card');
-        if (card.classList.contains('is-flipped')) return; // 뒷면이면 아무것도 안함
+        if (card.classList.contains('is-flipped')) return;
+
+        if (flipTimeout) {
+            clearTimeout(flipTimeout);
+            flipTimeout = null;
+        }
+        
         card.classList.add('is-flipped');
         startTimer();
     });
