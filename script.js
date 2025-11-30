@@ -20,7 +20,8 @@ const translations = {
         tail_questions_title: "💡 Follow-up Questions:", no_tail_questions: "None", add_tail_question_title: "Add follow-up",
         delete_question_title: "Delete question", confirm_delete: "Really delete this question and all its children?",
         new_question_placeholder: "Enter new question.", new_tail_question_placeholder: "Enter new follow-up question.",
-        new_question_category: "New Question"
+        new_question_category: "New Question",
+        follow_up_mode_label: "Prioritize follow-up questions"
     },
     ko: {
         editor_title: "질문 그래프 에디터", add_new_question: "새 질문 추가", load_settings: "설정 불러오기",
@@ -32,7 +33,8 @@ const translations = {
         tail_questions_title: "💡 예상 꼬리 질문:", no_tail_questions: "없음", add_tail_question_title: "꼬리 질문 추가",
         delete_question_title: "질문 삭제", confirm_delete: "정말로 이 질문과 모든 하위 질문을 삭제하시겠습니까?",
         new_question_placeholder: "새로운 질문을 입력하세요.", new_tail_question_placeholder: "새로운 꼬리 질문을 입력하세요.",
-        new_question_category: "새 질문"
+        new_question_category: "새 질문",
+        follow_up_mode_label: "꼬리 질문 우선"
     }
 };
 
@@ -146,13 +148,27 @@ function nextQuestion() {
     if (activeQuestionId) { document.querySelector(`.node-item[data-id="${activeQuestionId}"]`)?.classList.remove('is-active'); }
     const card = document.getElementById('card');
     card.classList.remove('is-flipped');
-    const allQuestions = flattenData(interviewData);
-    if (allQuestions.length === 0) {
-        document.getElementById('q-text').innerText = translations[currentLanguage].question_ready;
-        document.getElementById('q-category').innerText = translations[currentLanguage].category_ready;
-        return;
+
+    const followUpMode = document.getElementById('follow-up-mode').checked;
+    let data;
+
+    if (followUpMode && activeQuestionId) {
+        const currentNode = findNodeById(interviewData, activeQuestionId);
+        if (currentNode && currentNode.children && currentNode.children.length > 0) {
+            data = currentNode.children[Math.floor(Math.random() * currentNode.children.length)];
+        }
     }
-    const data = allQuestions[Math.floor(Math.random() * allQuestions.length)];
+
+    if (!data) {
+        const allQuestions = flattenData(interviewData);
+        if (allQuestions.length === 0) {
+            document.getElementById('q-text').innerText = translations[currentLanguage].question_ready;
+            document.getElementById('q-category').innerText = translations[currentLanguage].category_ready;
+            return;
+        }
+        data = allQuestions[Math.floor(Math.random() * allQuestions.length)];
+    }
+    
     activeQuestionId = data.id;
     const activeNode = document.querySelector(`.node-item[data-id="${activeQuestionId}"]`);
     if (activeNode) {

@@ -56,6 +56,10 @@
                 <label for="max-answer-time" data-i18n="max_answer_time_label">최대 답변 시간(초): </label>
                 <input type="number" id="max-answer-time" value="60" min="1" style="width: 50px;">
                 <button id="start-btn" class="btn btn-primary" onclick="nextQuestion()" data-i18n="start_button">시작 / 다음 질문</button>
+                <div class="settings-group" style="margin-left: 20px;">
+                    <input type="checkbox" id="follow-up-mode">
+                    <label for="follow-up-mode" data-i18n="follow_up_mode_label">꼬리 질문 우선</label>
+                </div>
             </div>
 
             <div class="card-container">
