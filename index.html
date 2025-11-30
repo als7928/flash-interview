@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>면접 실전 암기 트레이닝</title>
+    <title>Flash Interview</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <main class="main-container">
         <!-- 왼쪽: 그래프 에디터 영역 -->
-        <div class="editor-panel">
+        <div class="editor-panel" id="editor-panel">
             <div class="editor-content-wrapper">
                 <div class="editor-header">
                     <h3 data-i18n="editor_title">질문 그래프 에디터</h3>
@@ -42,11 +42,11 @@
             </div>
         </div>
 
+        <div class="resizer" id="resizer"></div>
+
         <button class="collapse-btn" id="collapse-btn" title="에디터 접기">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
         </button>
-
-        <div class="resizer" id="resizer"></div>
 
         <!-- 오른쪽: 면접 카드 영역 -->
         <div class="interview-panel">

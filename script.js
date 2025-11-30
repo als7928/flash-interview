@@ -32,15 +32,16 @@ const translations = {
 
 // --- 유틸리티 함수 ---
 function setLanguage(lang) {
-    if (lang === 'system') {
-        currentLanguage = (navigator.language || navigator.userLanguage).startsWith('ko') ? 'ko' : 'en';
-    } else {
-        currentLanguage = lang;
-    }
+    currentLanguage = lang === 'system' ? ((navigator.language || navigator.userLanguage).startsWith('ko') ? 'ko' : 'en') : lang;
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (translations[currentLanguage][key]) {
-            el.textContent = translations[currentLanguage][key];
+            el.title = ''; // Clear title first
+            if (el.tagName === 'BUTTON' && el.textContent.trim().length === 0) { // Icon-only buttons
+                el.title = translations[currentLanguage][key];
+            } else {
+                el.textContent = translations[currentLanguage][key];
+            }
         }
     });
 }
@@ -99,7 +100,7 @@ function nextQuestion() {
     card.classList.remove('is-flipped');
     const allQuestions = flattenData(interviewData);
     if (allQuestions.length === 0) {
-        setLanguage(currentLanguage); // Ensure text is translated even on empty
+        setLanguage(currentLanguage);
         return;
     }
     const data = allQuestions[Math.floor(Math.random() * allQuestions.length)];
@@ -129,7 +130,7 @@ function stopTimer() { if (currentTimer) clearInterval(currentTimer); if (flipTi
 
 // --- 파일 저장/불러오기 ---
 function saveToFile() { const d = JSON.stringify(interviewData, null, 2), b = new Blob([d], { type: "application/json" }), a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "interview_questions.json"; a.click(); URL.revokeObjectURL(a.href) }
-function loadFromFile(i) { const f = i.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => { try { const j = JSON.parse(e.target.result); if (Array.isArray(j)) { interviewData = j; renderGraph(); alert("설정 파일이 성공적으로 로드되었습니다!") } else alert("올바른 JSON 형식이 아닙니다.") } catch (err) { alert("파일을 읽는 중 오류가 발생했습니다: " + err.message) } }; r.readAsText(f) }
+function loadFromFile(i) { const f = i.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => { try { const j = JSON.parse(e.target.result); if (Array.isArray(j)) { interviewData = j; setLanguage(localStorage.getItem('language')||'system'); renderGraph(); alert("설정 파일이 성공적으로 로드되었습니다!") } else alert("올바른 JSON 형식이 아닙니다.") } catch (err) { alert("파일을 읽는 중 오류가 발생했습니다: " + err.message) } }; r.readAsText(f) }
 
 // --- UI 상호작용 초기화 ---
 function initializeSettings() {
@@ -150,8 +151,7 @@ function initializeSettings() {
 
 function initializeResizer() {
     const resizer = document.getElementById('resizer');
-    const editorPanel = document.querySelector('.editor-panel');
-    const collapseBtn = document.getElementById('collapse-btn');
+    const editorPanel = document.getElementById('editor-panel');
     let isResizing = false;
 
     const handleMouseMove = (e) => {
@@ -160,7 +160,6 @@ function initializeResizer() {
         if (newWidth < 250) newWidth = 250;
         if (newWidth > window.innerWidth * 0.8) newWidth = window.innerWidth * 0.8;
         editorPanel.style.flexBasis = `${newWidth}px`;
-        collapseBtn.style.left = `${newWidth}px`;
     };
     const handleMouseUp = () => {
         isResizing = false;
@@ -172,19 +171,10 @@ function initializeResizer() {
 
 function initializeCollapser() {
     const collapseBtn = document.getElementById('collapse-btn');
-    const editorPanel = document.querySelector('.editor-panel');
+    const editorPanel = document.getElementById('editor-panel');
     collapseBtn.addEventListener('click', () => {
-        const isCollapsed = editorPanel.classList.toggle('collapsed');
-        if (isCollapsed) {
-            collapseBtn.style.left = '0px';
-        } else {
-            const currentWidth = editorPanel.getBoundingClientRect().width;
-            collapseBtn.style.left = `${currentWidth}px`;
-        }
+        editorPanel.classList.toggle('collapsed');
     });
-     // Set initial position
-    const initialWidth = editorPanel.getBoundingClientRect().width;
-    collapseBtn.style.left = `${initialWidth}px`;
 }
 
 // --- 앱 초기화 ---

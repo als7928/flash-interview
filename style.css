@@ -1,15 +1,18 @@
 :root {
     --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --border-radius-sm: 8px;
+    --border-radius-md: 12px;
+    --border-radius-lg: 16px;
+
     --bg-color: #f7f8fa;
     --text-color: #333;
     --panel-bg: #ffffff;
     --border-color: #e9e9e9;
-    --input-bg: #f7f8fa;
+    --input-bg: #f0f1f5;
     --primary-color: #007aff;
     --secondary-color: #5856d6;
     --highlight-color-glow: rgba(0, 122, 255, 0.5);
     --shadow-color-light: rgba(0, 0, 0, 0.05);
-    --shadow-color-dark: rgba(0, 0, 0, 0.1);
 }
 
 [data-theme='dark'] {
@@ -22,7 +25,6 @@
     --secondary-color: #5e5ce6;
     --highlight-color-glow: rgba(10, 132, 255, 0.6);
     --shadow-color-light: rgba(0, 0, 0, 0.2);
-    --shadow-color-dark: rgba(0, 0, 0, 0.4);
 }
 
 * { box-sizing: border-box; }
@@ -37,11 +39,10 @@ body {
     transition: background-color 0.3s, color 0.3s;
 }
 
-.main-container { display: flex; height: 100%; }
+.main-container { position: relative; display: flex; height: 100%; }
 
 /* --- 에디터 패널 --- */
 .editor-panel {
-    position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -49,121 +50,80 @@ body {
     border-right: 1px solid var(--border-color);
     flex-shrink: 0;
     flex-basis: 450px;
-    min-width: 0; /* Animate min-width */
-    transition: flex-basis 0.4s ease, min-width 0.4s ease;
+    min-width: 0;
+    transition: flex-basis 0.4s ease, min-width 0.4s ease, border-color 0.4s ease;
+    position: relative; /* For child positioning */
+    overflow: visible; /* CRITICAL FIX: Allows button to be seen */
 }
-
-.editor-content-wrapper {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
+.editor-content-wrapper { display: flex; flex-direction: column; width: 100%; height: 100%; overflow: hidden; }
 .editor-header { padding: 16px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; }
 #graph-editor { flex-grow: 1; overflow-y: auto; padding: 16px; }
 .editor-footer { padding: 12px; border-top: 1px solid var(--border-color); flex-shrink: 0; display: flex; flex-direction: column; gap: 12px; }
 .settings-group { display: flex; justify-content: space-around; align-items: center; gap: 10px; }
-.settings-group select, .settings-group label { font-size: 0.9rem; }
-select { background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 6px 8px; }
+select { background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); padding: 6px 8px; }
 
 /* 접기 버튼 & 리사이저 */
 .collapse-btn {
     position: absolute;
-    right: -20px; top: 50%;
+    top: 50%;
+    right: -24px; /* Position relative to the panel's right edge */
     transform: translateY(-50%);
-    width: 20px; height: 50px;
+    width: 24px; height: 70px;
     background-color: var(--panel-bg);
     border: 1px solid var(--border-color);
     border-left: none;
-    border-radius: 0 8px 8px 0;
+    border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;
     cursor: pointer;
-    z-index: 10;
+    z-index: 20;
     display: flex; align-items: center; justify-content: center;
-    transition: transform 0.4s ease;
+    transition: all 0.3s ease;
+    box-shadow: 2px 0 5px var(--shadow-color-light);
 }
-.collapse-btn svg { width: 18px; height: 18px; fill: var(--text-color); transition: transform 0.4s ease; }
-.editor-panel.collapsed { flex-basis: 0; min-width: 0; border-right: none; }
+.collapse-btn:hover { background-color: var(--input-bg); }
+.collapse-btn svg { width: 22px; height: 22px; fill: var(--text-color); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
+
+.editor-panel.collapsed { flex-basis: 0;
+    min-width: 0;
+    border-right-color: transparent; }
+.editor-panel.collapsed .collapse-btn { right: -25px; } /* Push it out slightly more */
 .editor-panel.collapsed .collapse-btn svg { transform: rotate(180deg); }
 
-.resizer {
-    flex-basis: 4px;
-    cursor: col-resize;
-    background-color: transparent;
-    transition: background-color 0.2s;
-}
+.resizer { position: absolute; top: 0; right: 0; height: 100%; width: 4px; cursor: col-resize; background-color: transparent; z-index: 15; transition: background-color 0.2s; }
 .resizer:hover { background-color: var(--primary-color); }
 
 /* --- 인터뷰 패널 --- */
 .interview-panel { flex-grow: 1; display: flex; flex-direction: column; align-items: center; padding: 20px; height: 100vh; box-sizing: border-box; overflow-y: auto; }
 .control-panel { width: 100%; max-width: 600px; display: flex; justify-content: flex-end; align-items: center; gap: 15px; margin-bottom: 20px; }
 
-/* --- 카드 --- */
+/* ... Rest of the styles are identical to the previous correct version ... */
 .card-container { perspective: 1000px; width: 100%; max-width: 500px; height: 350px; }
 .card { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1); cursor: pointer; }
 .card.is-flipped { transform: rotateY(180deg); }
-.card-face {
-    position: absolute; width: 100%; height: 100%;
-    backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center;
-    border-radius: 16px; box-shadow: 0 4px 15px var(--shadow-color-light);
-    padding: 25px; text-align: center;
-    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-}
+.card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: var(--border-radius-lg); box-shadow: 0 4px 20px var(--shadow-color-light); padding: 25px; text-align: center; transition: all 0.3s; }
 .card-front { background-color: var(--panel-bg); color: var(--text-color); border: 1px solid var(--border-color); }
 .card-back { background-color: var(--secondary-color); color: #fff; transform: rotateY(180deg); }
-.category-badge { background: var(--primary-color); color: white; padding: 6px 12px; border-radius: 30px; font-size: 0.8rem; margin-bottom: 15px; font-weight: 500; }
-h2 { margin: 0 0 10px 0; font-size: 1.6rem; font-weight: 600; word-break: keep-all; }
+.category-badge { background: var(--primary-color); color: white; padding: 8px 16px; border-radius: 30px; font-size: 0.9rem; margin-bottom: 15px; font-weight: 500; }
+h2 { margin: 0 0 10px 0; font-size: 1.8rem; font-weight: 600; word-break: keep-all; }
 .timer { font-size: 3.5rem; font-weight: 700; margin-bottom: 10px; color: #f1c40f; }
-
-/* --- 노드 아이템 --- */
-.node-item {
-    border: 1px solid transparent;
-    border-radius: 8px;
-    padding: 8px;
-    margin-bottom: 8px;
-    transition: border-color 0.3s, background-color 0.3s;
-}
-.node-item.is-active {
-    border-color: var(--primary-color);
-    background-color: var(--input-bg);
-    box-shadow: 0 0 12px var(--highlight-color-glow);
-}
+.node-item { border: 2px solid transparent; border-radius: var(--border-radius-md); padding: 8px; margin-bottom: 8px; transition: all 0.3s; }
+.node-item.is-active { border-color: var(--primary-color); background-color: var(--input-bg); box-shadow: 0 0 12px var(--highlight-color-glow); }
 .node-main { display: flex; align-items: center; gap: 8px; }
-.node-main textarea {
-    flex-grow: 1;
-    border: 1px solid var(--border-color);
-    background-color: var(--input-bg);
-    color: var(--text-color);
-    border-radius: 6px; padding: 10px; font-family: inherit; font-size: 0.95rem; resize: none; overflow-y: hidden;
-    transition: border-color 0.3s, box-shadow 0.3s;
-}
-.node-main textarea:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px var(--highlight-color-glow);
-    outline: none;
-}
+.node-main textarea { flex-grow: 1; border: 1px solid var(--border-color); background-color: var(--input-bg); color: var(--text-color); border-radius: var(--border-radius-sm); padding: 12px; font-family: inherit; font-size: 0.95rem; resize: none; overflow-y: hidden; transition: all 0.3s; }
+.node-main textarea:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px var(--highlight-color-glow); outline: none; }
 .node-actions { display: flex; gap: 5px; }
 .node-children { padding-left: 20px; margin-top: 8px; border-left: 2px solid var(--border-color); }
-
-/* --- 공통 버튼 --- */
-.btn {
-    padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem;
-    transition: transform 0.1s, opacity 0.2s;
-}
-.btn:hover { opacity: 0.85; }
-.btn:active { transform: scale(0.97); }
+.btn { padding: 10px 20px; border: none; border-radius: var(--border-radius-md); cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: all 0.2s; }
+.btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.btn:active { transform: scale(0.98) translateY(0); }
 .btn-primary { background-color: var(--primary-color); color: white; }
 .btn-secondary { background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); }
-.btn-danger { background-color: #ff3b30; color: white; }
-.btn-sm { padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: none; border: none; }
-.btn-sm svg { width: 20px; height: 20px; fill: var(--text-color); opacity: 0.6; transition: opacity 0.2s; }
+.btn-sm { padding: 0; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: none; border: none; }
+.btn-sm svg { width: 22px; height: 22px; fill: var(--text-color); opacity: 0.6; transition: opacity 0.2s; }
 .btn-sm:hover svg { opacity: 1; }
 
-/* 반응형 */
 @media (max-width: 768px) {
     .main-container { flex-direction: column; }
-    .editor-panel { width: 100%; max-width: 100%; height: 50vh; border-right: none; border-bottom: 1px solid var(--border-color); flex-basis: 50vh; }
+    .editor-panel { width: 100%; max-width: 100%; height: 50vh; border-right: none; border-bottom: 1px solid var(--border-color); flex-basis: 50vh; position: static; }
     .resizer, .collapse-btn { display: none; }
     .interview-panel { height: auto; }
 }
