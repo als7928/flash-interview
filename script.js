@@ -1,65 +1,209 @@
-// 기본 데이터 (예시)
+// --- 초기 데이터 및 상태 변수 ---
 let interviewData = [
     {
-        "id": 1,
-        "category": "자기소개",
+        "id": "root-1",
+        "category": "기본 질문",
         "question": "1분 자기소개를 해보세요.",
-        "tailQuestions": ["자신의 강점을 실제 사례와 연결해 보세요.", "단점에 대해 설명해 보세요."]
+        "children": [
+            {
+                "id": "child-1-1",
+                "question": "자신의 가장 큰 강점은 무엇인가요?",
+                "children": []
+            },
+            {
+                "id": "child-1-2",
+                "question": "어떤 단점을 가지고 있으며, 어떻게 개선하고 있나요?",
+                "children": []
+            }
+        ]
     },
     {
-        "id": 2,
-        "category": "지원동기",
-        "question": "우리 회사에 지원한 구체적인 이유는 무엇인가요?",
-        "tailQuestions": ["경쟁사가 아닌 우리 회사여야 하는 이유는?", "직무와 관련된 본인의 경험은?"]
-    },
-    {
-        "id": 3,
-        "category": "인성",
-        "question": "동료와 갈등이 생겼을 때 어떻게 해결하셨나요?",
-        "tailQuestions": ["상사가 부당한 지시를 내린다면?", "스트레스는 어떻게 관리하나요?"]
+        "id": "root-2",
+        "category": "지원 동기",
+        "question": "우리 회사에 지원한 이유는 무엇인가요?",
+        "children": []
     }
 ];
 
 let currentTimer = null;
-let secondsElapsed = 0;
 let flipTimeout = null;
 
-// --- 기능 구현 ---
+// --- 유틸리티 함수 ---
+
+// 데이터 트리에서 모든 노드를 플랫 리스트로 변환
+function flattenData(nodes) {
+    let flat = [];
+    nodes.forEach(node => {
+        flat.push(node);
+        if (node.children && node.children.length > 0) {
+            flat = flat.concat(flattenData(node.children));
+        }
+    });
+    return flat;
+}
+
+// 데이터 트리에서 ID로 노드 찾기
+function findNodeById(nodes, id) {
+    for (const node of nodes) {
+        if (node.id === id) return node;
+        if (node.children) {
+            const found = findNodeById(node.children, id);
+            if (found) return found;
+        }
+    }
+    return null;
+}
+
+// 데이터 트리에서 노드 삭제
+function deleteNodeById(nodes, id) {
+    for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i].id === id) {
+            nodes.splice(i, 1);
+            return true;
+        }
+        if (nodes[i].children) {
+            if (deleteNodeById(nodes[i].children, id)) return true;
+        }
+    }
+    return false;
+}
+
+// 텍스트 영역 높이 자동 조절
+function autoResizeTextarea(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = (textarea.scrollHeight) + 'px';
+}
+
+
+// --- 그래프 에디터 기능 ---
+
+function renderNode(node, parentElement) {
+    const nodeItem = document.createElement('div');
+    nodeItem.className = 'node-item';
+    nodeItem.setAttribute('data-id', node.id);
+
+    const nodeMain = document.createElement('div');
+    nodeMain.className = 'node-main';
+
+    const textarea = document.createElement('textarea');
+    textarea.value = node.question;
+    textarea.setAttribute('rows', '1');
+    textarea.addEventListener('input', () => {
+        autoResizeTextarea(textarea);
+        node.question = textarea.value; // 실시간 데이터 업데이트
+    });
+    // 초기 로드 시 높이 조절
+    setTimeout(() => autoResizeTextarea(textarea), 0);
+
+    const actions = document.createElement('div');
+    actions.className = 'node-actions';
+    actions.innerHTML = `
+        <button class="btn btn-primary btn-sm" onclick="addChildQuestion('${node.id}')">+</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteQuestion('${node.id}')">-</button>
+    `;
+
+    nodeMain.appendChild(textarea);
+    nodeMain.appendChild(actions);
+    nodeItem.appendChild(nodeMain);
+
+    if (node.children && node.children.length > 0) {
+        const childrenContainer = document.createElement('div');
+        childrenContainer.className = 'node-children';
+        node.children.forEach(child => renderNode(child, childrenContainer));
+        nodeItem.appendChild(childrenContainer);
+    }
+
+    parentElement.appendChild(nodeItem);
+}
+
+function renderGraph() {
+    const editor = document.getElementById('graph-editor');
+    editor.innerHTML = '';
+    interviewData.forEach(rootNode => renderNode(rootNode, editor));
+}
+
+function addRootQuestion() {
+    const newQuestion = {
+        id: `root-${Date.now()}`,
+        category: "새 질문",
+        question: "새로운 질문을 입력하세요.",
+        children: []
+    };
+    interviewData.push(newQuestion);
+    renderGraph();
+}
+
+function addChildQuestion(parentId) {
+    const parentNode = findNodeById(interviewData, parentId);
+    if (parentNode) {
+        if (!parentNode.children) {
+            parentNode.children = [];
+        }
+        const newChild = {
+            id: `child-${Date.now()}`,
+            question: "새로운 꼬리 질문을 입력하세요.",
+            children: []
+        };
+        parentNode.children.push(newChild);
+        renderGraph();
+    }
+}
+
+function deleteQuestion(id) {
+    if (confirm("정말로 이 질문과 모든 하위 질문을 삭제하시겠습니까?")) {
+        deleteNodeById(interviewData, id);
+        renderGraph();
+    }
+}
+
+
+// --- 면접 카드 기능 ---
 
 function nextQuestion() {
-    // 1. 초기화
     stopTimer();
     const card = document.getElementById('card');
-    card.classList.remove('is-flipped'); // 앞면으로 복귀
-    
-    // 2. 랜덤 질문 뽑기
-    const randomIndex = Math.floor(Math.random() * interviewData.length);
-    const data = interviewData[randomIndex];
+    card.classList.remove('is-flipped');
 
-    // 3. UI 업데이트 (앞면)
-    setTimeout(() => { // 카드가 돌아온 후 내용 변경
-        document.getElementById('q-category').innerText = data.category;
+    const allQuestions = flattenData(interviewData);
+    if (allQuestions.length === 0) {
+        document.getElementById('q-text').innerText = "질문을 추가해주세요.";
+        document.getElementById('q-category').innerText = "준비";
+        return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * allQuestions.length);
+    const data = allQuestions[randomIndex];
+
+    setTimeout(() => {
+        // 루트 질문의 카테고리를 찾아서 표시
+        let category = "꼬리 질문";
+        const rootParent = interviewData.find(root => findNodeById([root], data.id));
+        if (rootParent && rootParent.id === data.id) {
+             category = rootParent.category || "기본 질문";
+        } else if (rootParent) {
+            category = rootParent.category + "의 꼬리질문";
+        }
+
+        document.getElementById('q-category').innerText = category;
         document.getElementById('q-text').innerText = data.question;
-        
-        // 뒷면 (꼬리질문) 업데이트
+
         const tailList = document.getElementById('q-tail');
         tailList.innerHTML = '';
-        if(data.tailQuestions && data.tailQuestions.length > 0) {
-            data.tailQuestions.forEach(q => {
+        const tailQuestions = data.children || [];
+
+        if (tailQuestions.length > 0) {
+            tailQuestions.forEach(q => {
                 const li = document.createElement('li');
-                li.innerText = q;
+                li.innerText = q.question;
                 tailList.appendChild(li);
             });
         } else {
-            tailList.innerHTML = '<li>없음</li>';
+            tailList.innerHTML = '<li>예상 꼬리 질문이 없습니다.</li>';
         }
     }, 200);
 
-    // 4. 자동 뒤집기 로직
     const flipTime = document.getElementById('flip-time').value * 1000;
-    
-    if(flipTimeout) clearTimeout(flipTimeout);
-    
+    if (flipTimeout) clearTimeout(flipTimeout);
     flipTimeout = setTimeout(() => {
         card.classList.add('is-flipped');
         startTimer();
@@ -67,24 +211,22 @@ function nextQuestion() {
 }
 
 function startTimer() {
-    secondsElapsed = 0;
     const timerEl = document.getElementById('timer');
     timerEl.innerText = "00.00";
-    
-    if(currentTimer) clearInterval(currentTimer);
-    
+    if (currentTimer) clearInterval(currentTimer);
+
     const startTime = Date.now();
     currentTimer = setInterval(() => {
-        const now = Date.now();
-        const diff = (now - startTime) / 1000;
+        const diff = (Date.now() - startTime) / 1000;
         timerEl.innerText = diff.toFixed(2);
     }, 10);
 }
 
 function stopTimer() {
-    if(currentTimer) clearInterval(currentTimer);
-    if(flipTimeout) clearTimeout(flipTimeout);
+    if (currentTimer) clearInterval(currentTimer);
+    if (flipTimeout) clearTimeout(flipTimeout);
 }
+
 
 // --- 파일 저장/불러오기 기능 ---
 
@@ -92,111 +234,36 @@ function saveToFile() {
     const dataStr = JSON.stringify(interviewData, null, 2);
     const blob = new Blob([dataStr], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    
     const a = document.createElement('a');
     a.href = url;
-    a.download = "interview_questions.json";
+    a.download = "interview_questions_graph.json";
     a.click();
     URL.revokeObjectURL(url);
 }
 
 function loadFromFile(input) {
     const file = input.files[0];
-    if(!file) return;
+    if (!file) return;
 
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
             const json = JSON.parse(e.target.result);
-            if(Array.isArray(json)) {
+            if (Array.isArray(json)) {
                 interviewData = json;
+                renderGraph(); // 에디터 다시 그리기
                 alert("설정 파일이 성공적으로 로드되었습니다!");
-                // 데이터 에디터에도 반영
-                document.getElementById('json-editor').value = JSON.stringify(interviewData, null, 2);
             } else {
                 alert("올바른 JSON 형식이 아닙니다.");
             }
-        } catch(err) {
-            alert("파일을 읽는 중 오류가 발생했습니다.");
+        } catch (err) {
+            alert("파일을 읽는 중 오류가 발생했습니다: " + err.message);
         }
     };
     reader.readAsText(file);
 }
 
-// --- 데이터 수정 모달 관련 ---
-
-function renderQuestionEditor(question = { id: Date.now(), category: '', question: '', tailQuestions: [] }) {
-    const editor = document.getElementById('question-editor');
-
-    const item = document.createElement('div');
-    item.className = 'question-item';
-    item.setAttribute('data-id', question.id);
-
-    item.innerHTML = `
-        <label>카테고리</label>
-        <input type="text" class="q-edit-category" value="${question.category}">
-        
-        <label>메인 질문</label>
-        <input type="text" class="q-edit-question" value="${question.question}">
-        
-        <label>꼬리 질문 (한 줄에 하나씩)</label>
-        <textarea class="q-edit-tail">${question.tailQuestions.join('\n')}</textarea>
-        
-        <div class="question-item-actions">
-            <button class="btn btn-danger" onclick="this.closest('.question-item').remove()">삭제</button>
-        </div>
-    `;
-    editor.appendChild(item);
-}
-
-function openEditModal() {
-    const editor = document.getElementById('question-editor');
-    editor.innerHTML = ''; // 기존 내용 초기화
-    
-    interviewData.forEach(q => renderQuestionEditor(q));
-
-    document.getElementById('data-modal').style.display = 'block';
-    document.getElementById('overlay').style.display = 'block';
-}
-
-function addQuestionToEditor() {
-    renderQuestionEditor();
-    // 새 항목으로 스크롤
-    const editor = document.getElementById('question-editor');
-    editor.scrollTop = editor.scrollHeight;
-}
-
-function closeEditModal() {
-    document.getElementById('data-modal').style.display = 'none';
-    document.getElementById('overlay').style.display = 'none';
-}
-
-function applyEditorChanges() {
-    const newInterviewData = [];
-    const questionItems = document.querySelectorAll('#question-editor .question-item');
-
-    questionItems.forEach((item, index) => {
-        const category = item.querySelector('.q-edit-category').value.trim();
-        const question = item.querySelector('.q-edit-question').value.trim();
-        const tailQuestions = item.querySelector('.q-edit-tail').value.split('\n').map(t => t.trim()).filter(t => t);
-
-        if (!category || !question) {
-            // 빈 항목은 무시
-            return;
-        }
-
-        newInterviewData.push({
-            id: item.getAttribute('data-id') || Date.now() + index,
-            category,
-            question,
-            tailQuestions
-        });
-    });
-
-    interviewData = newInterviewData;
-    closeEditModal();
-    alert("데이터가 성공적으로 적용되었습니다.");
-
-    // 변경된 데이터를 파일 저장 시에도 사용할 수 있도록 textarea도 업데이트 (선택적)
-    // document.getElementById('json-editor').value = JSON.stringify(interviewData, null, 2);
-}
+// --- 앱 초기화 ---
+document.addEventListener('DOMContentLoaded', () => {
+    renderGraph();
+});
