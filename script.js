@@ -23,6 +23,12 @@ const translations = {
         order_mode_label: "Order:",
         order_random: "Random",
         order_dfs: "In Order",
+        add_tail_question_title: "Add tail question",
+        delete_question_title: "delete question",
+        alert_load_success: "Settings file loaded successfully!",
+        alert_invalid_json: "Invalid JSON format.",
+        alert_file_read_error: "Error reading file: ",
+        confirm_delete: "Are you sure you want to delete this question and all its sub-questions?",
     },
     ko: {
         editor_title: "질문 에디터", add_new_question: "새 질문 추가", load_settings: "불러오기",
@@ -36,6 +42,12 @@ const translations = {
         order_mode_label: "질문 순서:",
         order_random: "랜덤",
         order_dfs: "순서대로",
+        add_tail_question_title: "꼬리 질문 추가",
+        delete_question_title: "질문 삭제",
+        alert_load_success: "설정 파일이 성공적으로 로드되었습니다!",
+        alert_invalid_json: "올바른 JSON 형식이 아닙니다.",
+        alert_file_read_error: "파일을 읽는 중 오류가 발생했습니다: ",
+        confirm_delete: "정말로 이 질문과 모든 하위 질문을 삭제하시겠습니까?",
     }
 };
 
@@ -114,6 +126,11 @@ function saveInterviewDataToLocalStorage() {
     } catch (e) {
         console.error("Error saving interview data to local storage", e);
     }
+}
+
+function saveData() {
+    generateDfsOrder();
+    saveInterviewDataToLocalStorage();
 }
 
 function generateDfsOrder() {
@@ -371,7 +388,7 @@ function stopTimer() {
 
 // --- 파일 저장/불러오기 ---
 function saveToFile() { const d = JSON.stringify(interviewData, null, 2), b = new Blob([d], { type: "application/json" }), a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "interview_questions.json"; a.click(); URL.revokeObjectURL(a.href) }
-function loadFromFile(i) { const f = i.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => { try { const j = JSON.parse(e.target.result); if (Array.isArray(j)) { interviewData = j; setLanguage(localStorage.getItem('language')||'system'); generateDfsOrder(); alert("설정 파일이 성공적으로 로드되었습니다!") } else alert("올바른 JSON 형식이 아닙니다.") } catch (err) { alert("파일을 읽는 중 오류가 발생했습니다: " + err.message) } }; r.readAsText(f) }
+function loadFromFile(i) { const f = i.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => { try { const j = JSON.parse(e.target.result); if (Array.isArray(j)) { interviewData = j; setLanguage(localStorage.getItem('language')||'system'); generateDfsOrder(); alert(translations[currentLanguage].alert_load_success) } else alert(translations[currentLanguage].alert_invalid_json) } catch (err) { alert(translations[currentLanguage].alert_file_read_error + err.message) } }; r.readAsText(f) }
 
 // --- UI 상호작용 초기화 ---
 function initializeSettings() {
