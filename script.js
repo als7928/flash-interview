@@ -176,8 +176,22 @@ function nextQuestion() {
     }, flipTime);
 }
 
-function startTimer() { /* ... 기존 로직과 동일 ... */ }
-function stopTimer() { /* ... 기존 로직과 동일 ... */ }
+function startTimer() {
+    const timerEl = document.getElementById('timer');
+    timerEl.innerText = "00.00";
+    if (currentTimer) clearInterval(currentTimer);
+
+    const startTime = Date.now();
+    currentTimer = setInterval(() => {
+        const diff = (Date.now() - startTime) / 1000;
+        timerEl.innerText = diff.toFixed(2);
+    }, 10);
+}
+
+function stopTimer() {
+    if (currentTimer) clearInterval(currentTimer);
+    if (flipTimeout) clearTimeout(flipTimeout);
+}
 
 // --- 파일 저장/불러오기 ---
 function saveToFile() {
@@ -236,21 +250,26 @@ function initializeResizer() {
     const resizer = document.querySelector('.resizer');
     const editorPanel = document.querySelector('.editor-panel');
     let isResizing = false;
-    resizer.addEventListener('mousedown', (e) => {
-        isResizing = true;
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', () => {
-            isResizing = false;
-            document.removeEventListener('mousemove', handleMouseMove);
-        });
-    });
-    function handleMouseMove(e) {
+
+    const handleMouseMove = (e) => {
         if (!isResizing) return;
         const newWidth = e.clientX;
         if (newWidth > 250 && newWidth < window.innerWidth * 0.8) {
             editorPanel.style.flexBasis = `${newWidth}px`;
         }
-    }
+    };
+
+    const handleMouseUp = () => {
+        isResizing = false;
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    resizer.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+    });
 }
 
 function initializeCollapser() {
