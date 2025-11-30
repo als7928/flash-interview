@@ -179,6 +179,20 @@ h2 { margin: 0 0 10px 0; font-size: 1.8rem; font-weight: 600; word-break: keep-a
 .btn-sm svg { width: 22px; height: 22px; fill: var(--text-color); opacity: 0.6; transition: opacity 0.2s; }
 .btn-sm:hover svg { opacity: 1; }
 
+.node-item.dragging {
+    opacity: 0.5;
+    background: var(--input-bg);
+}
+.node-item.drag-over-before {
+    border-top: 2px solid var(--primary-color);
+}
+.node-item.drag-over-after {
+    border-bottom: 2px solid var(--primary-color);
+}
+.node-item.drag-over-inside {
+    background-color: var(--highlight-color-glow);
+}
+
 @media (max-width: 768px) {
     .main-container { flex-direction: column; }
     .editor-panel { width: 100%; max-width: 100%; height: 50vh; border-right: none; border-bottom: 1px solid var(--border-color); flex-basis: 50vh; position: static; }

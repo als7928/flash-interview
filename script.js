@@ -61,6 +61,52 @@ function setLanguage(lang) {
     });
     renderGraph();
 }
+
+function findNodeAndParent(nodes, id, parent = null) {
+    for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        if (node.id === id) {
+            return { node, parent, index: i };
+        }
+        if (node.children) {
+            const found = findNodeAndParent(node.children, id, node);
+            if (found) {
+                return found;
+            }
+        }
+    }
+    return null;
+}
+
+
+function moveNode(draggedId, targetId, position) {
+    if (draggedId === targetId) return;
+
+    const { node: draggedNode, parent: draggedParent, index: draggedIndex } = findNodeAndParent(interviewData, draggedId);
+    if (!draggedNode) return;
+
+    // Remove from old position
+    const sourceList = draggedParent ? draggedParent.children : interviewData;
+    sourceList.splice(draggedIndex, 1);
+
+    // Add to new position
+    if (position === 'inside') {
+        const { node: targetNode } = findNodeAndParent(interviewData, targetId);
+        if (targetNode) {
+            targetNode.children = targetNode.children || [];
+            targetNode.children.push(draggedNode);
+        }
+    } else {
+        const { parent: targetParent, index: targetIndex } = findNodeAndParent(interviewData, targetId);
+        const destList = targetParent ? targetParent.children : interviewData;
+        const finalIndex = position === 'before' ? targetIndex : targetIndex + 1;
+        destList.splice(finalIndex, 0, draggedNode);
+    }
+
+    renderGraph();
+}
+
+
 function flattenData(nodes) { return nodes.reduce((acc, node) => { acc.push(node); if (node.children) acc.push(...flattenData(node.children)); return acc; }, []); }
 function findNodeById(nodes, id) { for (const node of nodes) { if (node.id === id) return node; if (node.children) { const found = findNodeById(node.children, id); if (found) return found; } } return null; }
 function deleteNodeById(nodes, id) { for (let i = 0; i < nodes.length; i++) { if (nodes[i].id === id) { nodes.splice(i, 1); return true; } if (nodes[i].children && deleteNodeById(nodes[i].children, id)) return true; } return false; }
@@ -83,6 +129,65 @@ function renderNode(node, parentElement) {
     const nodeItem = document.createElement('div');
     nodeItem.className = 'node-item';
     nodeItem.setAttribute('data-id', node.id);
+    nodeItem.setAttribute('draggable', 'true');
+
+    nodeItem.addEventListener('dragstart', (e) => {
+        e.stopPropagation();
+        e.dataTransfer.setData('text/plain', node.id);
+        e.dataTransfer.effectAllowed = 'move';
+        setTimeout(() => nodeItem.classList.add('dragging'), 0);
+    });
+
+    nodeItem.addEventListener('dragend', (e) => {
+        e.stopPropagation();
+        nodeItem.classList.remove('dragging');
+        document.querySelectorAll('.drag-over-before, .drag-over-after, .drag-over-inside').forEach(el => {
+            el.classList.remove('drag-over-before', 'drag-over-after', 'drag-over-inside');
+        });
+    });
+
+    nodeItem.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const rect = nodeItem.getBoundingClientRect();
+        const y = e.clientY - rect.top;
+        
+        nodeItem.classList.remove('drag-over-before', 'drag-over-after', 'drag-over-inside');
+
+        if (y < rect.height * 0.25) {
+            nodeItem.classList.add('drag-over-before');
+        } else if (y > rect.height * 0.75) {
+            nodeItem.classList.add('drag-over-after');
+        } else {
+            nodeItem.classList.add('drag-over-inside');
+        }
+    });
+
+    nodeItem.addEventListener('dragleave', (e) => {
+        e.stopPropagation();
+        nodeItem.classList.remove('drag-over-before', 'drag-over-after', 'drag-over-inside');
+    });
+
+    nodeItem.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const draggedId = e.dataTransfer.getData('text/plain');
+        const targetId = node.id;
+        
+        let position = 'after';
+        if (nodeItem.classList.contains('drag-over-before')) {
+            position = 'before';
+        } else if (nodeItem.classList.contains('drag-over-inside')) {
+            position = 'inside';
+        }
+        
+        nodeItem.classList.remove('drag-over-before', 'drag-over-after', 'drag-over-inside');
+        
+        moveNode(draggedId, targetId, position);
+    });
+
+
     const nodeMain = document.createElement('div');
     nodeMain.className = 'node-main';
     const textarea = document.createElement('textarea');
