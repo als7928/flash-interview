@@ -14,6 +14,7 @@ const translations = {
         editor_title: "Question Graph Editor", add_new_question: "Add New Question", load_settings: "Load Settings",
         save_settings: "Save Settings", language_label: "Language:", theme_label: "Theme:", lang_system: "System",
         theme_system: "System", theme_light: "Light", theme_dark: "Dark", flip_time_label: "Flip Time (s):",
+        max_answer_time_label: "Max Answer Time (s):",
         start_button: "Start / Next", category_ready: "Ready", question_ready: "Press the Start button",
         info_ready: "The card will flip shortly.", answer_start: "Start your answer!",
         tail_questions_title: "💡 Follow-up Questions:", no_tail_questions: "None", add_tail_question_title: "Add follow-up",
@@ -23,6 +24,7 @@ const translations = {
         editor_title: "질문 그래프 에디터", add_new_question: "새 질문 추가", load_settings: "설정 불러오기",
         save_settings: "설정 저장하기", language_label: "언어:", theme_label: "테마:", lang_system: "시스템",
         theme_system: "시스템", theme_light: "라이트", theme_dark: "다크", flip_time_label: "뒤집기 시간(초):",
+        max_answer_time_label: "최대 답변 시간(초):",
         start_button: "시작 / 다음 질문", category_ready: "준비", question_ready: "시작 버튼을 눌러주세요",
         info_ready: "잠시 후 카드가 뒤집힙니다.", answer_start: "답변을 시작하세요!",
         tail_questions_title: "💡 예상 꼬리 질문:", no_tail_questions: "없음", add_tail_question_title: "꼬리 질문 추가",
@@ -125,7 +127,21 @@ function nextQuestion() {
     if (flipTimeout) clearTimeout(flipTimeout);
     flipTimeout = setTimeout(() => { card.classList.add('is-flipped'); startTimer(); }, flipTime);
 }
-function startTimer() { const t = document.getElementById('timer'); t.innerText = "00.00"; if (currentTimer) clearInterval(currentTimer); const s = Date.now(); currentTimer = setInterval(() => { const d = (Date.now() - s) / 1000; t.innerText = d.toFixed(2) }, 10) }
+function startTimer() {
+    const timerEl = document.getElementById('timer');
+    const maxTime = parseInt(document.getElementById('max-answer-time').value, 10);
+    timerEl.innerText = "00.00";
+    if (currentTimer) clearInterval(currentTimer);
+    
+    const startTime = Date.now();
+    currentTimer = setInterval(() => {
+        const diff = (Date.now() - startTime) / 1000;
+        timerEl.innerText = diff.toFixed(2);
+        if (diff >= maxTime) {
+            nextQuestion();
+        }
+    }, 10);
+}
 function stopTimer() { if (currentTimer) clearInterval(currentTimer); if (flipTimeout) clearTimeout(flipTimeout) }
 
 // --- 파일 저장/불러오기 ---
@@ -183,4 +199,5 @@ document.addEventListener('DOMContentLoaded', () => {
     renderGraph();
     initializeResizer();
     initializeCollapser();
+    document.getElementById('card').addEventListener('click', nextQuestion);
 });
