@@ -61,19 +61,13 @@ body {
     min-height: 0; /* Crucial for scrolling flex items */
     transition: opacity 0.2s ease-in-out;
 }
-.editor-header { 
-    padding: 12px 16px; 
-    border-bottom: 1px solid var(--border-color); 
-    flex-shrink: 0; 
-    display: flex; 
+.editor-header {
+    padding: 12px 16px 12px 60px; /* Add left padding for buttons */
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+    display: flex;
     justify-content: space-between;
     align-items: center;
-}
-.editor-header-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0; /* Prevent content from pushing out */
 }
 .editor-header-left {
     display: flex;
@@ -104,8 +98,11 @@ body {
 }
 
 /* --- 접기/펼치기 버튼 & 리사이저 --- */
-.collapse-btn {
-    position: relative;
+.collapse-btn, .expand-btn {
+    position: absolute;
+    top: 12px;
+    left: 16px;
+    z-index: 30;
     padding: 0;
     width: 36px;
     height: 36px;
@@ -116,46 +113,22 @@ body {
     border-radius: var(--border-radius-md);
     cursor: pointer;
     transition: all 0.2s ease;
-    background: none;
-    flex-shrink: 0; /* Prevent shrinking in flex container */
 }
-.collapse-btn:hover { 
+.collapse-btn {
+    background: none;
+}
+.expand-btn {
+    background-color: var(--panel-bg);
+}
+.collapse-btn:hover, .expand-btn:hover { 
     background-color: var(--input-bg); 
     border-color: var(--border-color);
 }
-.collapse-btn svg { 
+.collapse-btn svg, .expand-btn svg { 
     width: 24px; 
     height: 24px; 
     fill: var(--text-color); 
     transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); 
-}
-
-.expand-btn {
-    position: absolute;
-    top: 12px;
-    left: 16px;
-    z-index: 30; /* High z-index */
-    background-color: var(--panel-bg);
-    /* Match the styles of collapse-btn */
-    padding: 0;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid transparent;
-    border-radius: var(--border-radius-md);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-.expand-btn:hover {
-    background-color: var(--input-bg); 
-    border-color: var(--border-color);
-}
-.expand-btn svg {
-    width: 24px; 
-    height: 24px; 
-    fill: var(--text-color); 
 }
 
 .editor-panel.collapsed {
