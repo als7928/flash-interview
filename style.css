@@ -7,10 +7,11 @@
     --text-color: #333;
     --panel-bg: #ffffff;
     --border-color: #e9e9e9;
-    --input-bg: #f0f1f5;
+    --input-bg: #ffffff;
+    --hover: #eff3fc;
     --primary-color: #007aff;
     --secondary-color: #5856d6;
-    --highlight-color-glow: rgba(0, 122, 255, 0.5);
+    --highlight-color-glow: rgba(120, 185, 255, 0.5);
     --shadow-color-light: rgba(0, 0, 0, 0.05);
 }
 
@@ -20,6 +21,7 @@
     --panel-bg: #2c2c2e;
     --border-color: #3a3a3c;
     --input-bg: #3a3a3c;
+    --hover: #393939;
     --primary-color: #0a84ff;
     --secondary-color: #5e5ce6;
     --highlight-color-glow: rgba(10, 132, 255, 0.6);
@@ -113,11 +115,12 @@ body {
     background: none;
     flex-shrink: 0;
 }
-.collapse-btn:hover, .expand-btn:hover { 
-    background-color: var(--input-bg); 
+.collapse-btn:hover, .expand-btn:hover {
+    background-color: var(--input-bg);
     border-color: var(--border-color);
-}
-.collapse-btn svg, .expand-btn svg { 
+    opacity: 0.85;
+    transform: translateY(-1px);
+}.collapse-btn svg, .expand-btn svg { 
     width: 24px; 
     height: 24px; 
     fill: var(--text-color); 
@@ -129,9 +132,9 @@ body {
     min-width: 80px;
     border-width: 1px; /* Keep border for consistency */
 }
-.editor-panel.collapsed .editor-content-wrapper {
+/* .editor-panel.collapsed .editor-content-wrapper { */
     /* Keep the wrapper, hide its contents */
-}
+/* } */
 .editor-panel.collapsed .editor-header-left h3,
 .editor-panel.collapsed #add-root-btn,
 .editor-panel.collapsed #graph-editor,
@@ -192,9 +195,9 @@ body {
     border-color: var(--primary-color);
     box-shadow: 0 0 10px var(--highlight-color-glow);
 }
-.order-mode-group label:not(:has(+ input:checked)):hover {
-    background-color: var(--input-bg);
-}
+/* .order-mode-group label:not(:has(+ input:checked)):hover { */
+    /* background-color: var(--input-bg); */
+/* } */
 .btn svg {
     vertical-align: middle;
     margin-right: 8px;
@@ -233,7 +236,7 @@ h2 { margin: 0 0 10px 0; font-size: 1.8rem; font-weight: 600; word-break: keep-a
     transition: all 0.3s; 
 }
 .node-item:hover { /* Added hover effect */
-    background-color: var(--input-bg);
+    background-color: var(--hover);
 }
 .node-item.is-active { border-color: var(--primary-color); background-color: var(--input-bg); box-shadow: 0 0 12px var(--highlight-color-glow); }
 .node-main { display: flex; align-items: center; gap: 8px; }

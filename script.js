@@ -27,8 +27,8 @@ const translations = {
         order_dfs: "In Order",
     },
     ko: {
-        editor_title: "질문 에디터", add_new_question: "새 질문 추가", load_settings: "설정 불러오기",
-        save_settings: "설정 저장하기", language_label: "언어:", theme_label: "테마:", lang_system: "시스템",
+        editor_title: "질문 에디터", add_new_question: "새 질문 추가", load_settings: "불러오기",
+        save_settings: "저장하기", language_label: "언어:", theme_label: "테마:", lang_system: "시스템",
         theme_system: "시스템", theme_light: "라이트", theme_dark: "다크", flip_time_label: "뒤집기 시간(초):",
         max_answer_time_label: "최대 답변 시간(초):",
         start_button: "시작 / 다음 질문", question_ready: "시작 버튼을 눌러주세요",
