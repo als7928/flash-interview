@@ -10,15 +10,17 @@
     <main class="main-container">
         <!-- 왼쪽: 그래프 에디터 영역 -->
 <div class="editor-panel" id="editor-panel">
-            <button class="collapse-btn" id="collapse-btn" title="에디터 접기">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
-            </button>
-            <button class="expand-btn" id="expand-btn" title="에디터 펼치기" style="display: none;">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
-            </button>
             <div class="editor-content-wrapper">
                 <div class="editor-header">
-                    <h3 data-i18n="editor_title">질문 에디터</h3>
+                    <div class="editor-header-left">
+                        <button class="collapse-btn" id="collapse-btn" title="에디터 접기">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                        </button>
+                        <button class="expand-btn" id="expand-btn" title="에디터 펼치기" style="display: none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+                        </button>
+                        <h3 data-i18n="editor_title">질문 에디터</h3>
+                    </div>
                     <button id="add-root-btn" class="btn btn-primary" onclick="addRootQuestion()" data-i18n="add_new_question">새 질문 추가</button>
                 </div>
                 <div id="graph-editor">

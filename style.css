@@ -61,11 +61,11 @@ body {
     min-height: 0; /* Crucial for scrolling flex items */
     transition: opacity 0.2s ease-in-out;
 }
-.editor-header {
-    padding: 12px 16px 12px 60px; /* Add left padding for buttons */
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
-    display: flex;
+.editor-header { 
+    padding: 12px 16px; 
+    border-bottom: 1px solid var(--border-color); 
+    flex-shrink: 0; 
+    display: flex; 
     justify-content: space-between;
     align-items: center;
 }
@@ -99,10 +99,7 @@ body {
 
 /* --- 접기/펼치기 버튼 & 리사이저 --- */
 .collapse-btn, .expand-btn {
-    position: absolute;
-    top: 12px;
-    left: 16px;
-    z-index: 30;
+    position: relative;
     padding: 0;
     width: 36px;
     height: 36px;
@@ -113,12 +110,8 @@ body {
     border-radius: var(--border-radius-md);
     cursor: pointer;
     transition: all 0.2s ease;
-}
-.collapse-btn {
     background: none;
-}
-.expand-btn {
-    background-color: var(--panel-bg);
+    flex-shrink: 0;
 }
 .collapse-btn:hover, .expand-btn:hover { 
     background-color: var(--input-bg); 
@@ -132,19 +125,21 @@ body {
 }
 
 .editor-panel.collapsed {
-    flex-basis: 50px; /* Small width when collapsed */
-    min-width: 50px;
-    border-width: 0;
+    flex-basis: 80px; /* Adjust to fit the button and padding */
+    min-width: 80px;
+    border-width: 1px; /* Keep border for consistency */
 }
 .editor-panel.collapsed .editor-content-wrapper {
-    opacity: 0;
-    pointer-events: none;
+    /* Keep the wrapper, hide its contents */
 }
-.editor-panel.collapsed .collapse-btn {
-    display: none; /* Hide collapse button when collapsed */
+.editor-panel.collapsed .editor-header-left h3,
+.editor-panel.collapsed #add-root-btn,
+.editor-panel.collapsed #graph-editor,
+.editor-panel.collapsed .editor-footer {
+    display: none;
 }
-.editor-panel.collapsed + .resizer { /* Target adjacent resizer */
-    left: 50px; /* Position resizer at the edge of collapsed panel */
+.editor-panel.collapsed + .resizer {
+    display: none;
 }
 
 /* Ensure icons in buttons are correctly styled */

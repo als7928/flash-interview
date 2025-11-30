@@ -443,21 +443,30 @@ function initializeCollapser() {
     const editorPanel = document.getElementById('editor-panel');
     const resizer = document.getElementById('resizer');
 
-    // Set initial display state for expandBtn
-    expandBtn.style.display = editorPanel.classList.contains('collapsed') ? 'flex' : 'none';
+    // Initial state setup
+    const isCollapsed = editorPanel.classList.contains('collapsed');
+    collapseBtn.style.display = isCollapsed ? 'none' : 'flex';
+    expandBtn.style.display = isCollapsed ? 'flex' : 'none';
+    if(resizer) {
+        resizer.style.display = isCollapsed ? 'none' : 'block';
+    }
 
     collapseBtn.addEventListener('click', () => {
         editorPanel.classList.add('collapsed');
-        resizer.style.display = 'none';
-        expandBtn.style.display = 'flex'; // Show expand button
+        if(resizer) {
+            resizer.style.display = 'none';
+        }
+        expandBtn.style.display = 'flex';
+        collapseBtn.style.display = 'none';
     });
 
     expandBtn.addEventListener('click', () => {
         editorPanel.classList.remove('collapsed');
-        editorPanel.style.flexBasis = '450px'; // Restore default width
-        editorPanel.style.minWidth = '450px'; // Restore default min-width
-        resizer.style.display = 'block';
-        expandBtn.style.display = 'none'; // Hide expand button
+        if(resizer) {
+            resizer.style.display = 'block';
+        }
+        expandBtn.style.display = 'none';
+        collapseBtn.style.display = 'flex';
     });
 }
 
