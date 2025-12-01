@@ -58,7 +58,7 @@ const translations = {
         alert_invalid_json: "Invalid JSON format.",
         alert_file_read_error: "Error reading file: ",
         confirm_delete: "Are you sure you want to delete this question and all its sub-questions?",
-        answer_placeholder: "No answer yet.",
+        answer_placeholder: "Edit your answer.",
         edit_answer_title: "Edit Answer",
     },
     ko: {
@@ -79,7 +79,7 @@ const translations = {
         alert_invalid_json: "올바른 JSON 형식이 아닙니다.",
         alert_file_read_error: "파일을 읽는 중 오류가 발생했습니다: ",
         confirm_delete: "정말로 이 질문과 모든 하위 질문을 삭제하시겠습니까?",
-        answer_placeholder: "아직 답변이 없습니다.",
+        answer_placeholder: "답변을 입력하세요.",
         edit_answer_title: "답변 수정",
     }
 };
