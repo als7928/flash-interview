@@ -734,7 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const editAnswerBtn = document.getElementById('edit-answer-btn');
 
     card.addEventListener('click', (e) => {
-        if (isPaused) return;
+        if (!activeQuestionId || isPaused) return; // Do not flip initial or paused card
         // Do not flip if the edit button or the editor itself is clicked
         if (e.target === editAnswerBtn || editAnswerBtn.contains(e.target) || e.target === answerInput) {
             return;

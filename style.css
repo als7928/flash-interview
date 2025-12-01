@@ -306,7 +306,6 @@ h2 {
     font-size: 1.8rem; 
     font-weight: 600; 
     word-break: keep-all; 
-    max-height: 250px; /* Allow scrolling for long questions */
     overflow-y: auto;
 }
 
@@ -344,7 +343,6 @@ h2, #answer-text {
     line-height: 1.6;
     text-align: left;
     white-space: pre-wrap;
-    max-height: 200px; /* Allow scrolling for long answers */
     overflow-y: auto;
 }
 
