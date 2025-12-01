@@ -1,12 +1,3 @@
-const setItem = localStorage.setItem;
-localStorage.constructor.prototype.setItem = (key, value) => setItem.apply(localStorage, [location.pathname + ':' + key, value])
-
-const getItem = localStorage.getItem;
-localStorage.constructor.prototype.getItem = (key) => getItem.apply(localStorage, [location.pathname + ':' + key]);
-
-const removeItem = localStorage.removeItem;
-localStorage.constructor.prototype.removeItem = (key) => removeItem.apply(localStorage, [location.pathname + ':' + key]);
-
 // --- 초기 데이터 및 상태 변수 ---
 let interviewData = [
     { "id": "root-1", "question": "1분 자기소개를 해보세요.", "answer": "저는 어떤 상황에서도 빠르게 적응하는 개발자입니다.", "children": [
