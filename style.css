@@ -226,10 +226,8 @@ body {
     max-width: 500px; 
     min-height: 350px; /* Changed from height */
     position: absolute; /* Changed for dragging */
-    /* Centered horizontally and 150px from the top */
-    left: 50%;
+    left: calc(50% - 250px); /* Initial centered position */
     top: 150px;
-    transform: translateX(-50%); 
     display: flex; /* Use flexbox to manage children */
     flex-direction: column;
     filter: drop-shadow(0 12px 24px var(--shadow-color-light));

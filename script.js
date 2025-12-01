@@ -645,36 +645,36 @@ function initializeCollapser() {
 function initializeDraggableCard() {
     const cardContainer = document.getElementById('card-container');
     const cardHeader = document.getElementById('card-header');
-    let isDragging = false;
-    let startX, startY, initialX, initialY;
+    let offsetX, offsetY, isDragging = false;
 
     cardHeader.addEventListener('mousedown', (e) => {
-        e.preventDefault();
         isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
+        // Calculate the offset from the top-left corner of the element
+        offsetX = e.clientX - cardContainer.getBoundingClientRect().left;
+        offsetY = e.clientY - cardContainer.getBoundingClientRect().top;
         
-        const style = window.getComputedStyle(cardContainer);
-        const matrix = new DOMMatrix(style.transform);
-        initialX = matrix.m41;
-        initialY = matrix.m42;
+        // Prevent default behavior like text selection
+        e.preventDefault();
 
         document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
+        document.addEventListener('mouseup', onMouseUp, { once: true });
     });
 
     function onMouseMove(e) {
         if (!isDragging) return;
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        cardContainer.style.transform = `translate(${initialX + dx}px, ${initialY + dy}px)`;
+        // Calculate new position
+        const newX = e.clientX - offsetX;
+        const newY = e.clientY - offsetY;
+
+        // Set the new position
+        cardContainer.style.left = `${newX}px`;
+        cardContainer.style.top = `${newY}px`;
+        cardContainer.style.transform = ''; // Clear transform to avoid conflicts
     }
 
     function onMouseUp() {
-        if (!isDragging) return;
         isDragging = false;
         document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
     }
 }
 
@@ -685,30 +685,33 @@ function initializeResizableCard() {
     let startX, startY, startWidth, startHeight;
 
     resizer.addEventListener('mousedown', (e) => {
-        e.preventDefault();
         isResizing = true;
         startX = e.clientX;
         startY = e.clientY;
         startWidth = cardContainer.offsetWidth;
         startHeight = cardContainer.offsetHeight;
 
+        e.preventDefault();
+
         document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
+        document.addEventListener('mouseup', onMouseUp, { once: true });
     });
 
     function onMouseMove(e) {
         if (!isResizing) return;
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
-        cardContainer.style.width = `${startWidth + dx}px`;
-        cardContainer.style.height = `${startHeight + dy}px`;
+
+        const newWidth = startWidth + dx;
+        const newHeight = startHeight + dy;
+
+        cardContainer.style.width = `${newWidth}px`;
+        cardContainer.style.height = `${newHeight}px`;
     }
 
     function onMouseUp() {
-        if (!isResizing) return;
         isResizing = false;
         document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
     }
 }
 
