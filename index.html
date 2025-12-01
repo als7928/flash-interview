@@ -77,9 +77,13 @@
                     </div>
                 </div>
                 <button id="start-btn" class="btn btn-primary" onclick="nextQuestion()" data-i18n="start_button">시작 / 다음 질문</button>
+                <button id="pause-btn" class="btn btn-secondary" onclick="togglePause()" data-i18n="pause_button">일시정지</button>
             </div>
 
-            <div class="card-container">
+            <div class="card-container" id="card-container">
+                <div class="card-header" id="card-header">
+                    <span class="card-title">Interview Card</span>
+                </div>
                 <div class="card" id="card">
                     <div class="card-face card-front">
                         <div class="flip-timer-animation" id="flip-timer-animation"></div>
@@ -99,6 +103,7 @@
                         </button>
                     </div>
                 </div>
+                <div class="card-resizer" id="card-resizer"></div>
             </div>
         </div>
     </main>

@@ -36,6 +36,7 @@ try {
 
 
 let currentTimer = null, flipTimeout = null, activeQuestionId = null, currentLanguage = 'ko';
+let isPaused = false, pauseStart = 0, pausedTime = 0;
 let dfsOrderedQuestions = [], dfsCurrentIndex = -1;
 
 // --- 번역 데이터 ---
@@ -60,6 +61,8 @@ const translations = {
         confirm_delete: "Are you sure you want to delete this question and all its sub-questions?",
         answer_placeholder: "Edit your answer.",
         edit_answer_title: "Edit Answer",
+        pause_button: "Pause",
+        resume_button: "Resume"
     },
     ko: {
         editor_title: "질문 에디터", add_new_question: "새 질문 추가", load_settings: "불러오기",
@@ -81,6 +84,8 @@ const translations = {
         confirm_delete: "정말로 이 질문과 모든 하위 질문을 삭제하시겠습니까?",
         answer_placeholder: "답변을 입력하세요.",
         edit_answer_title: "답변 수정",
+        pause_button: "일시정지",
+        resume_button: "다시시작"
     }
 };
 
@@ -168,16 +173,6 @@ function flattenData(nodes) { return nodes.reduce((acc, node) => { acc.push(node
 function findNodeById(nodes, id) { for (const node of nodes) { if (node.id === id) return node; if (node.children) { const found = findNodeById(node.children, id); if (found) return found; } } return null; }
 function deleteNodeById(nodes, id) { for (let i = 0; i < nodes.length; i++) { if (nodes[i].id === id) { nodes.splice(i, 1); return true; } if (nodes[i].children && deleteNodeById(nodes[i].children, id)) return true; } return false; }
 function autoResizeTextarea(textarea) { textarea.style.height = 'auto'; textarea.style.height = textarea.scrollHeight + 'px'; }
-
-function adjustFontSize(element, text) {
-    const baseSize = 1.8; // base font size in rem
-    let newSize = baseSize;
-
-    if (text.length > 50) {
-        newSize = baseSize * Math.max(0.5, 1 - (text.length - 50) / 150);
-    }
-    element.style.fontSize = `${newSize}rem`;
-}
 
 function saveInterviewDataToLocalStorage() {
     try {
@@ -368,20 +363,21 @@ function showQuestion(id) {
 
     setTimeout(() => {
         qTextElement.innerText = data.question;
-        adjustFontSize(qTextElement, data.question);
 
         if (data.answer) {
             answerTextElement.innerText = data.answer;
         } else {
             answerTextElement.innerText = translations[currentLanguage].answer_placeholder;
         }
-        adjustFontSize(answerTextElement, answerTextElement.innerText);
 
     }, 200);
 }
 
 function nextQuestion() {
     stopTimer();
+    isPaused = false; // Reset pause state on next question
+    document.getElementById('pause-btn').textContent = translations[currentLanguage].pause_button;
+
     if (activeQuestionId) { document.querySelector(`.node-item[data-id="${activeQuestionId}"]`)?.classList.remove('is-active'); }
     const card = document.getElementById('card');
     card.classList.remove('is-flipped');
@@ -430,14 +426,12 @@ function nextQuestion() {
     
     setTimeout(() => {
         qTextElement.innerText = data.question;
-        adjustFontSize(qTextElement, data.question);
 
         if (data.answer) {
             answerTextElement.innerText = data.answer;
         } else {
             answerTextElement.innerText = translations[currentLanguage].answer_placeholder;
         }
-        adjustFontSize(answerTextElement, answerTextElement.innerText);
         
         const flipTime = document.getElementById('flip-time').value;
         const timerEl = document.getElementById('flip-timer-animation');
@@ -457,31 +451,83 @@ function nextQuestion() {
     flipTimeout = setTimeout(() => { card.classList.add('is-flipped'); startTimer(); }, flipTimeMs);
 }
 
+let startTime, remainingTime;
+
 function startTimer() {
     const timerEl = document.getElementById('timer');
     const maxTime = parseInt(document.getElementById('max-answer-time').value, 10);
     timerEl.innerText = "00.00";
     if (currentTimer) clearInterval(currentTimer);
     
-    const startTime = Date.now();
+    startTime = Date.now();
+    pausedTime = 0; // Reset paused time for the new timer
+
     currentTimer = setInterval(() => {
-        const diff = (Date.now() - startTime) / 1000;
-        timerEl.innerText = diff.toFixed(2);
-        if (diff >= maxTime) {
-            nextQuestion();
+        if (!isPaused) {
+            const elapsedTime = (Date.now() - startTime - pausedTime) / 1000;
+            timerEl.innerText = elapsedTime.toFixed(2);
+            if (elapsedTime >= maxTime) {
+                nextQuestion();
+            }
         }
     }, 10);
 }
 
 function stopTimer() { 
-    if (currentTimer) clearInterval(currentTimer); 
+    if (currentTimer) clearInterval(currentTimer);
+    currentTimer = null; 
     if (flipTimeout) clearTimeout(flipTimeout);
+    flipTimeout = null;
     const timerEl = document.getElementById('flip-timer-animation');
     if (timerEl) {
         timerEl.style.transition = 'none';
         timerEl.style.transform = 'scaleX(0)';
     }
 }
+
+function togglePause() {
+    if (!currentTimer && !flipTimeout) return; // Can't pause if no timer is active
+
+    isPaused = !isPaused;
+    const pauseBtn = document.getElementById('pause-btn');
+    const flipTimerEl = document.getElementById('flip-timer-animation');
+
+    if (isPaused) {
+        pauseBtn.textContent = translations[currentLanguage].resume_button;
+        if (flipTimeout) { // Pausing during the flip countdown
+            clearTimeout(flipTimeout);
+            // Capture remaining time
+            const elapsed = (Date.now() - (startTime || Date.now())); // Use current time if startTime not set
+            const flipTimeMs = document.getElementById('flip-time').value * 1000;
+            remainingTime = flipTimeMs - elapsed;
+            
+            // Freeze the animation
+            const computedStyle = window.getComputedStyle(flipTimerEl);
+            const currentTransform = computedStyle.getPropertyValue('transform');
+            flipTimerEl.style.transform = currentTransform;
+            flipTimerEl.style.transition = 'none';
+        } else if (currentTimer) { // Pausing during the answer timer
+            pauseStart = Date.now();
+        }
+    } else {
+        pauseBtn.textContent = translations[currentLanguage].pause_button;
+        if (remainingTime > 0) { // Resuming during the flip countdown
+            const card = document.getElementById('card');
+            const newDuration = remainingTime / 1000;
+            flipTimerEl.style.transition = `transform ${newDuration}s linear`;
+            flipTimerEl.style.transform = 'scaleX(0)';
+
+            flipTimeout = setTimeout(() => {
+                card.classList.add('is-flipped');
+                startTimer();
+                remainingTime = 0; // Reset for next pause
+            }, remainingTime);
+        } else if (currentTimer) { // Resuming during the answer timer
+            pausedTime += (Date.now() - pauseStart);
+        }
+    }
+}
+
 
 // --- 파일 저장/불러오기 ---
 function saveToFile() { const d = JSON.stringify(interviewData, null, 2), b = new Blob([d], { type: "application/json" }), a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "interview_questions.json"; a.click(); URL.revokeObjectURL(a.href) }
@@ -596,6 +642,67 @@ function initializeCollapser() {
     });
 }
 
+function initializeDraggableCard() {
+    const cardContainer = document.getElementById('card-container');
+    const cardHeader = document.getElementById('card-header');
+    let isDragging = false;
+    let offsetX, offsetY;
+
+    cardHeader.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        offsetX = e.clientX - cardContainer.offsetLeft;
+        offsetY = e.clientY - cardContainer.offsetTop;
+        cardContainer.style.cursor = 'move';
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    });
+
+    function onMouseMove(e) {
+        if (!isDragging) return;
+        const newX = e.clientX - offsetX;
+        const newY = e.clientY - offsetY;
+        cardContainer.style.left = `${newX}px`;
+        cardContainer.style.top = `${newY}px`;
+    }
+
+    function onMouseUp() {
+        isDragging = false;
+        cardContainer.style.cursor = 'default';
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+    }
+}
+
+function initializeResizableCard() {
+    const cardContainer = document.getElementById('card-container');
+    const resizer = document.getElementById('card-resizer');
+    let isResizing = false;
+
+    resizer.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        e.preventDefault(); // Prevent text selection while resizing
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    });
+
+    function onMouseMove(e) {
+        if (!isResizing) return;
+        const newWidth = e.clientX - cardContainer.offsetLeft;
+        const newHeight = e.clientY - cardContainer.offsetTop;
+        cardContainer.style.width = `${newWidth}px`;
+        cardContainer.style.height = `${newHeight}px`;
+    }
+
+    function onMouseUp() {
+        isResizing = false;
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+    }
+}
+
+
 // --- 앱 초기화 ---
 document.addEventListener('DOMContentLoaded', () => {
     initializeSettings();
@@ -603,6 +710,8 @@ document.addEventListener('DOMContentLoaded', () => {
     renderGraph();
     initializeResizer();
     initializeCollapser();
+    initializeDraggableCard();
+    initializeResizableCard();
     
     const card = document.getElementById('card');
     const answerContainer = document.querySelector('.answer-container');
@@ -612,6 +721,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const editAnswerBtn = document.getElementById('edit-answer-btn');
 
     card.addEventListener('click', (e) => {
+        if (isPaused) return;
         // Do not flip if the edit button or the editor itself is clicked
         if (e.target === editAnswerBtn || editAnswerBtn.contains(e.target) || e.target === answerInput) {
             return;
@@ -641,7 +751,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!node) return;
             
             answerInput.value = node.answer || '';
-            adjustFontSize(answerText, answerInput.value); // Adjust font size for the visible text
             answerEditor.style.display = 'flex';
             answerContainer.style.display = 'none';
             answerInput.focus();
@@ -654,7 +763,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (node) {
             node.answer = answerInput.value;
             answerText.innerText = answerInput.value || translations[currentLanguage].answer_placeholder;
-            adjustFontSize(answerText, answerText.innerText);
             saveData();
         }
     });
