@@ -646,13 +646,18 @@ function initializeDraggableCard() {
     const cardContainer = document.getElementById('card-container');
     const cardHeader = document.getElementById('card-header');
     let isDragging = false;
-    let offsetX, offsetY;
+    let startX, startY, initialX, initialY;
 
     cardHeader.addEventListener('mousedown', (e) => {
+        e.preventDefault();
         isDragging = true;
-        offsetX = e.clientX - cardContainer.offsetLeft;
-        offsetY = e.clientY - cardContainer.offsetTop;
-        cardContainer.style.cursor = 'move';
+        startX = e.clientX;
+        startY = e.clientY;
+        
+        const style = window.getComputedStyle(cardContainer);
+        const matrix = new DOMMatrix(style.transform);
+        initialX = matrix.m41;
+        initialY = matrix.m42;
 
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
@@ -660,15 +665,14 @@ function initializeDraggableCard() {
 
     function onMouseMove(e) {
         if (!isDragging) return;
-        const newX = e.clientX - offsetX;
-        const newY = e.clientY - offsetY;
-        cardContainer.style.left = `${newX}px`;
-        cardContainer.style.top = `${newY}px`;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        cardContainer.style.transform = `translate(${initialX + dx}px, ${initialY + dy}px)`;
     }
 
     function onMouseUp() {
+        if (!isDragging) return;
         isDragging = false;
-        cardContainer.style.cursor = 'default';
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
     }
@@ -678,10 +682,15 @@ function initializeResizableCard() {
     const cardContainer = document.getElementById('card-container');
     const resizer = document.getElementById('card-resizer');
     let isResizing = false;
+    let startX, startY, startWidth, startHeight;
 
     resizer.addEventListener('mousedown', (e) => {
+        e.preventDefault();
         isResizing = true;
-        e.preventDefault(); // Prevent text selection while resizing
+        startX = e.clientX;
+        startY = e.clientY;
+        startWidth = cardContainer.offsetWidth;
+        startHeight = cardContainer.offsetHeight;
 
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
@@ -689,13 +698,14 @@ function initializeResizableCard() {
 
     function onMouseMove(e) {
         if (!isResizing) return;
-        const newWidth = e.clientX - cardContainer.offsetLeft;
-        const newHeight = e.clientY - cardContainer.offsetTop;
-        cardContainer.style.width = `${newWidth}px`;
-        cardContainer.style.height = `${newHeight}px`;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        cardContainer.style.width = `${startWidth + dx}px`;
+        cardContainer.style.height = `${startHeight + dy}px`;
     }
 
     function onMouseUp() {
+        if (!isResizing) return;
         isResizing = false;
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
