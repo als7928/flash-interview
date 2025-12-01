@@ -1,4 +1,11 @@
-import 'https://als7928.github.io/flash-interview/script.js';
+const setItem = localStorage.setItem;
+localStorage.constructor.prototype.setItem = (key, value) => setItem.apply(localStorage, [location.pathname + ':' + key, value])
+
+const getItem = localStorage.getItem;
+localStorage.constructor.prototype.getItem = (key) => getItem.apply(localStorage, [location.pathname + ':' + key]);
+
+const removeItem = localStorage.removeItem;
+localStorage.constructor.prototype.removeItem = (key) => removeItem.apply(localStorage, [location.pathname + ':' + key]);
 
 // --- 초기 데이터 및 상태 변수 ---
 let interviewData = [
