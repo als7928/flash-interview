@@ -222,8 +222,7 @@ body {
 
 .card-container { 
     perspective: 1000px; 
-    width: 100%; 
-    max-width: 500px; 
+    width: 500px; /* Initial width, can be resized */
     min-height: 350px; /* Changed from height */
     position: absolute; /* Changed for dragging */
     left: calc(50% - 250px); /* Initial centered position */
@@ -243,6 +242,9 @@ body {
     user-select: none;
     text-align: center;
     font-weight: 600;
+    flex-shrink: 0; /* Prevent shrinking */
+    z-index: 10; /* Ensure header is on top */
+    position: relative; /* z-index needs a position other than static */
 }
 
 .card { 
@@ -254,6 +256,7 @@ body {
     transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1); 
     cursor: pointer; 
     border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg); /* Adjust border radius */
+    z-index: 1; /* Position card below the header */
 }
 .card.is-flipped { transform: rotateY(180deg); }
 .card-face { 
