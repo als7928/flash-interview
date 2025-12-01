@@ -1,11 +1,30 @@
 // --- 초기 데이터 및 상태 변수 ---
-let interviewData = [
+let interviewData;
+const defaultInterviewData = [
     { "id": "root-1", "question": "1분 자기소개를 해보세요.", "answer": "저는 어떤 상황에서도 빠르게 적응하는 개발자입니다.", "children": [
             { "id": "child-1-1", "question": "자신의 가장 큰 강점은 무엇인가요?", "answer": "저의 가장 큰 강점은 탁월한 문제 해결 능력입니다.", "children": [] },
             { "id": "child-1-2", "question": "어떤 단점을 가지고 있으며, 어떻게 개선하고 있나요?", "answer": "", "children": [] }
     ]},
     { "id": "root-2", "question": "우리 회사에 지원한 이유는 무엇인가요?", "answer": "", "children": [] }
 ];
+
+try {
+    const savedData = localStorage.getItem('FLASH_INTERVIEW_QUESTIONS');
+    if (savedData) {
+        interviewData = JSON.parse(savedData);
+        // Basic validation to ensure it's an array
+        if (!Array.isArray(interviewData)) {
+            interviewData = defaultInterviewData;
+        }
+    } else {
+        interviewData = defaultInterviewData;
+    }
+} catch (e) {
+    console.error("Error loading or parsing interview data from local storage, using default data.", e);
+    interviewData = defaultInterviewData;
+}
+
+
 let currentTimer = null, flipTimeout = null, activeQuestionId = null, currentLanguage = 'ko';
 let dfsOrderedQuestions = [], dfsCurrentIndex = -1;
 
@@ -570,34 +589,6 @@ function initializeCollapser() {
 // --- 앱 초기화 ---
 document.addEventListener('DOMContentLoaded', () => {
     initializeSettings();
-    
-    // Load interview data from Local Storage
-    const savedData = localStorage.getItem('FLASH_INTERVIEW_QUESTIONS');
-    if (savedData) {
-        try {
-            let parsedData = JSON.parse(savedData);
-            if (Array.isArray(parsedData)) {
-                // Backwards compatibility: ensure all loaded items have an 'answer' property
-                const ensureAnswer = (nodes) => {
-                    nodes.forEach(node => {
-                        if (node.answer === undefined) {
-                            node.answer = '';
-                        }
-                        if (node.children) {
-                            ensureAnswer(node.children);
-                        }
-                    });
-                };
-                ensureAnswer(parsedData);
-                interviewData = parsedData;
-                console.log("Loaded and updated interview data from local storage.");
-            } else {
-                console.warn("Local storage data is not an array, using default interview data.");
-            }
-        } catch (e) {
-            console.error("Error parsing local storage data, using default interview data.", e);
-        }
-    }
     
     renderGraph();
     initializeResizer();
