@@ -1,10 +1,12 @@
+import 'https://als7928.github.io/flash-interview/script.js';
+
 // --- 초기 데이터 및 상태 변수 ---
 let interviewData = [
-    { "id": "root-1", "question": "1분 자기소개를 해보세요.", "children": [
-            { "id": "child-1-1", "question": "자신의 가장 큰 강점은 무엇인가요?", "children": [] },
-            { "id": "child-1-2", "question": "어떤 단점을 가지고 있으며, 어떻게 개선하고 있나요?", "children": [] }
+    { "id": "root-1", "question": "1분 자기소개를 해보세요.", "answer": "저는 어떤 상황에서도 빠르게 적응하는 개발자입니다.", "children": [
+            { "id": "child-1-1", "question": "자신의 가장 큰 강점은 무엇인가요?", "answer": "저의 가장 큰 강점은 탁월한 문제 해결 능력입니다.", "children": [] },
+            { "id": "child-1-2", "question": "어떤 단점을 가지고 있으며, 어떻게 개선하고 있나요?", "answer": "", "children": [] }
     ]},
-    { "id": "root-2", "question": "우리 회사에 지원한 이유는 무엇인가요?", "children": [] }
+    { "id": "root-2", "question": "우리 회사에 지원한 이유는 무엇인가요?", "answer": "", "children": [] }
 ];
 let currentTimer = null, flipTimeout = null, activeQuestionId = null, currentLanguage = 'ko';
 let dfsOrderedQuestions = [], dfsCurrentIndex = -1;
@@ -29,6 +31,8 @@ const translations = {
         alert_invalid_json: "Invalid JSON format.",
         alert_file_read_error: "Error reading file: ",
         confirm_delete: "Are you sure you want to delete this question and all its sub-questions?",
+        answer_placeholder: "No answer yet.",
+        edit_answer_title: "Edit Answer",
     },
     ko: {
         editor_title: "질문 에디터", add_new_question: "새 질문 추가", load_settings: "불러오기",
@@ -48,6 +52,8 @@ const translations = {
         alert_invalid_json: "올바른 JSON 형식이 아닙니다.",
         alert_file_read_error: "파일을 읽는 중 오류가 발생했습니다: ",
         confirm_delete: "정말로 이 질문과 모든 하위 질문을 삭제하시겠습니까?",
+        answer_placeholder: "아직 답변이 없습니다.",
+        edit_answer_title: "답변 수정",
     }
 };
 
@@ -57,17 +63,33 @@ function setLanguage(lang) {
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (translations[currentLanguage] && translations[currentLanguage][key]) {
-            el.title = ''; // Clear title first
-            if (el.tagName === 'BUTTON' && el.textContent.trim().length === 0) { // Icon-only buttons
-                el.title = translations[currentLanguage][key];
+            const translation = translations[currentLanguage][key];
+            if (el.tagName === 'BUTTON' && el.classList.contains('btn-sm')) {
+                el.title = translation;
             } else if (el.hasAttribute('placeholder')) {
-                el.placeholder = translations[currentLanguage][key];
+                el.placeholder = translation;
             } else {
-                el.textContent = translations[currentLanguage][key];
+                // Check if the element has child nodes that are not elements
+                const textNode = Array.from(el.childNodes).find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0);
+                if (textNode) {
+                    textNode.textContent = translation;
+                } else if (el.textContent.trim().length > 0 || Object.keys(el.dataset).length > 0) {
+                     el.textContent = translation;
+                }
             }
         }
     });
     renderGraph();
+    // Re-translate placeholder for active card if needed
+    if(activeQuestionId) {
+        const data = findNodeById(interviewData, activeQuestionId);
+        if(!data.answer) {
+             document.getElementById('answer-text').textContent = translations[currentLanguage].answer_placeholder;
+        }
+    } else {
+         document.getElementById('q-text').textContent = translations[currentLanguage].question_ready;
+    }
+     document.getElementById('edit-answer-btn').title = translations[currentLanguage].edit_answer_title;
 }
 
 function findNodeAndParent(nodes, id, parent = null) {
@@ -120,6 +142,16 @@ function findNodeById(nodes, id) { for (const node of nodes) { if (node.id === i
 function deleteNodeById(nodes, id) { for (let i = 0; i < nodes.length; i++) { if (nodes[i].id === id) { nodes.splice(i, 1); return true; } if (nodes[i].children && deleteNodeById(nodes[i].children, id)) return true; } return false; }
 function autoResizeTextarea(textarea) { textarea.style.height = 'auto'; textarea.style.height = textarea.scrollHeight + 'px'; }
 
+function adjustFontSize(element, text) {
+    const baseSize = 1.8; // base font size in rem
+    let newSize = baseSize;
+
+    if (text.length > 50) {
+        newSize = baseSize * Math.max(0.5, 1 - (text.length - 50) / 150);
+    }
+    element.style.fontSize = `${newSize}rem`;
+}
+
 function saveInterviewDataToLocalStorage() {
     try {
         localStorage.setItem('FLASH_INTERVIEW_QUESTIONS', JSON.stringify(interviewData));
@@ -136,6 +168,10 @@ function saveData() {
 function generateDfsOrder() {
     dfsOrderedQuestions = [];
     const dfs = (node) => {
+        // Ensure every node has an 'answer' property
+        if (node.answer === undefined) {
+            node.answer = '';
+        }
         dfsOrderedQuestions.push(node);
         if (node.children) {
             node.children.forEach(dfs);
@@ -219,7 +255,7 @@ function renderNode(node, parentElement) {
     textarea.placeholder = isRoot 
         ? translations[currentLanguage].new_question_placeholder
         : translations[currentLanguage].new_tail_question_placeholder;
-    textarea.addEventListener('input', () => { autoResizeTextarea(textarea); node.question = textarea.value; generateDfsOrder(); });
+    textarea.addEventListener('input', () => { autoResizeTextarea(textarea); node.question = textarea.value; saveData(); });
     textarea.addEventListener('click', () => showQuestion(node.id));
     setTimeout(() => autoResizeTextarea(textarea), 0);
     const actions = document.createElement('div');
@@ -253,14 +289,14 @@ function renderGraph() {
     generateDfsOrder();
 }
 function addRootQuestion() { 
-    interviewData.push({ id: `root-${Date.now()}`, question: '', children: [] }); 
+    interviewData.push({ id: `root-${Date.now()}`, question: '', answer: '', children: [] }); 
     renderGraph(); 
 }
 function addChildQuestion(id) { 
     const p = findNodeById(interviewData, id); 
     if (p) { 
         p.children = p.children || []; 
-        p.children.push({ id: `child-${Date.now()}`, question: '', children: [] }); 
+        p.children.push({ id: `child-${Date.now()}`, question: '', answer: '', children: [] }); 
         renderGraph(); 
     } 
 }
@@ -295,8 +331,25 @@ function showQuestion(id) {
     const card = document.getElementById('card');
     card.classList.remove('is-flipped');
 
+    const qTextElement = document.getElementById('q-text');
+    const answerTextElement = document.getElementById('answer-text');
+    const answerEditor = document.querySelector('.answer-editor');
+    const answerContainer = document.querySelector('.answer-container');
+    
+    answerEditor.style.display = 'none';
+    answerContainer.style.display = 'flex';
+
     setTimeout(() => {
-        document.getElementById('q-text').innerText = data.question;
+        qTextElement.innerText = data.question;
+        adjustFontSize(qTextElement, data.question);
+
+        if (data.answer) {
+            answerTextElement.innerText = data.answer;
+        } else {
+            answerTextElement.innerText = translations[currentLanguage].answer_placeholder;
+        }
+        adjustFontSize(answerTextElement, answerTextElement.innerText);
+
     }, 200);
 }
 
@@ -339,8 +392,25 @@ function nextQuestion() {
         activeNode.classList.add('is-active');
         activeNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+
+    const qTextElement = document.getElementById('q-text');
+    const answerTextElement = document.getElementById('answer-text');
+    const answerEditor = document.querySelector('.answer-editor');
+    const answerContainer = document.querySelector('.answer-container');
+
+    answerEditor.style.display = 'none';
+    answerContainer.style.display = 'flex';
+    
     setTimeout(() => {
-        document.getElementById('q-text').innerText = data.question;
+        qTextElement.innerText = data.question;
+        adjustFontSize(qTextElement, data.question);
+
+        if (data.answer) {
+            answerTextElement.innerText = data.answer;
+        } else {
+            answerTextElement.innerText = translations[currentLanguage].answer_placeholder;
+        }
+        adjustFontSize(answerTextElement, answerTextElement.innerText);
         
         const flipTime = document.getElementById('flip-time').value;
         const timerEl = document.getElementById('flip-timer-animation');
@@ -388,7 +458,40 @@ function stopTimer() {
 
 // --- 파일 저장/불러오기 ---
 function saveToFile() { const d = JSON.stringify(interviewData, null, 2), b = new Blob([d], { type: "application/json" }), a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "interview_questions.json"; a.click(); URL.revokeObjectURL(a.href) }
-function loadFromFile(i) { const f = i.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => { try { const j = JSON.parse(e.target.result); if (Array.isArray(j)) { interviewData = j; setLanguage(localStorage.getItem('language')||'system'); generateDfsOrder(); alert(translations[currentLanguage].alert_load_success) } else alert(translations[currentLanguage].alert_invalid_json) } catch (err) { alert(translations[currentLanguage].alert_file_read_error + err.message) } }; r.readAsText(f) }
+function loadFromFile(i) { 
+    const f = i.files[0]; 
+    if (!f) return; 
+    const r = new FileReader(); 
+    r.onload = e => { 
+        try { 
+            const j = JSON.parse(e.target.result); 
+            if (Array.isArray(j)) { 
+                // Ensure all loaded items have an 'answer' property
+                const ensureAnswer = (nodes) => {
+                    nodes.forEach(node => {
+                        if (node.answer === undefined) {
+                            node.answer = '';
+                        }
+                        if (node.children) {
+                            ensureAnswer(node.children);
+                        }
+                    });
+                };
+                ensureAnswer(j);
+                interviewData = j; 
+                setLanguage(localStorage.getItem('language')||'system'); 
+                generateDfsOrder(); 
+                alert(translations[currentLanguage].alert_load_success);
+            } else {
+                alert(translations[currentLanguage].alert_invalid_json);
+            } 
+        } catch (err) { 
+            alert(translations[currentLanguage].alert_file_read_error + err.message);
+        } 
+    }; 
+    r.readAsText(f);
+}
+
 
 // --- UI 상호작용 초기화 ---
 function initializeSettings() {
@@ -474,10 +577,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedData = localStorage.getItem('FLASH_INTERVIEW_QUESTIONS');
     if (savedData) {
         try {
-            const parsedData = JSON.parse(savedData);
-            if (Array.isArray(parsedData)) { // An empty array is a valid state
+            let parsedData = JSON.parse(savedData);
+            if (Array.isArray(parsedData)) {
+                // Backwards compatibility: ensure all loaded items have an 'answer' property
+                const ensureAnswer = (nodes) => {
+                    nodes.forEach(node => {
+                        if (node.answer === undefined) {
+                            node.answer = '';
+                        }
+                        if (node.children) {
+                            ensureAnswer(node.children);
+                        }
+                    });
+                };
+                ensureAnswer(parsedData);
                 interviewData = parsedData;
-                console.log("Loaded interview data from local storage.");
+                console.log("Loaded and updated interview data from local storage.");
             } else {
                 console.warn("Local storage data is not an array, using default interview data.");
             }
@@ -490,8 +605,19 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeResizer();
     initializeCollapser();
     
-    document.getElementById('card').addEventListener('click', () => {
-        const card = document.getElementById('card');
+    const card = document.getElementById('card');
+    const answerContainer = document.querySelector('.answer-container');
+    const answerEditor = document.querySelector('.answer-editor');
+    const answerInput = document.getElementById('answer-input');
+    const answerText = document.getElementById('answer-text');
+    const editAnswerBtn = document.getElementById('edit-answer-btn');
+
+    card.addEventListener('click', (e) => {
+        // Do not flip if the edit button or the editor itself is clicked
+        if (e.target === editAnswerBtn || editAnswerBtn.contains(e.target) || e.target === answerInput) {
+            return;
+        }
+
         if (card.classList.contains('is-flipped')) return;
 
         if (flipTimeout) {
@@ -501,5 +627,36 @@ document.addEventListener('DOMContentLoaded', () => {
         
         card.classList.add('is-flipped');
         startTimer();
+    });
+
+    editAnswerBtn.addEventListener('click', () => {
+        const isEditing = answerEditor.style.display === 'flex';
+        if (isEditing) {
+            // Save and switch to view mode
+            answerEditor.style.display = 'none';
+            answerContainer.style.display = 'flex';
+        } else {
+            // Switch to edit mode
+            if (!activeQuestionId) return;
+            const node = findNodeById(interviewData, activeQuestionId);
+            if (!node) return;
+            
+            answerInput.value = node.answer || '';
+            adjustFontSize(answerText, answerInput.value); // Adjust font size for the visible text
+            answerEditor.style.display = 'flex';
+            answerContainer.style.display = 'none';
+            answerInput.focus();
+        }
+    });
+
+    answerInput.addEventListener('input', () => {
+        if (!activeQuestionId) return;
+        const node = findNodeById(interviewData, activeQuestionId);
+        if (node) {
+            node.answer = answerInput.value;
+            answerText.innerText = answerInput.value || translations[currentLanguage].answer_placeholder;
+            adjustFontSize(answerText, answerText.innerText);
+            saveData();
+        }
     });
 });
