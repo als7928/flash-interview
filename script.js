@@ -498,7 +498,27 @@ function stopTimer() {
 
 function flipCard() {
     if (!activeQuestionId) return;
-    document.getElementById('card').classList.toggle('is-flipped');
+    const card = document.getElementById('card');
+
+    // If a flip is scheduled (from nextQuestion), cancel it.
+    if (flipTimeout) {
+        clearTimeout(flipTimeout);
+        flipTimeout = null;
+        const timerEl = document.getElementById('flip-timer-animation');
+        if (timerEl) {
+            timerEl.style.transition = 'none';
+            timerEl.style.transform = 'scaleX(0)';
+        }
+    }
+
+    const isFlippingToBack = !card.classList.contains('is-flipped');
+    card.classList.toggle('is-flipped');
+
+    if (isFlippingToBack) {
+        startTimer();
+    } else {
+        stopTimer();
+    }
 }
 
 
@@ -764,21 +784,12 @@ document.addEventListener('DOMContentLoaded', () => {
     flipCardBtn.addEventListener('click', flipCard);
 
     card.addEventListener('click', (e) => {
-        if (!activeQuestionId || isPaused) return; // Do not flip initial or paused card
-        // Do not flip if the edit button or the editor itself is clicked
-        if (e.target === editAnswerBtn || editAnswerBtn.contains(e.target) || e.target === answerInput) {
+        if (!activeQuestionId || isPaused) return;
+        // Prevent flip if clicking on interactive elements inside the card
+        if (e.target.closest('button, textarea')) {
             return;
         }
-
-        if (card.classList.contains('is-flipped')) return;
-
-        if (flipTimeout) {
-            clearTimeout(flipTimeout);
-            flipTimeout = null;
-        }
-        
-        card.classList.add('is-flipped');
-        startTimer();
+        flipCard();
     });
 
     editAnswerBtn.addEventListener('click', () => {
