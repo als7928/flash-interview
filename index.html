@@ -65,7 +65,7 @@
                     <label for="flip-time" data-i18n="flip_time_label">뒤집기 시간(초): </label>
                     <input type="number" id="flip-time" value="3" min="1" style="width: 50px;">
                     <label for="max-answer-time" data-i18n="max_answer_time_label">최대 답변 시간(초): </label>
-                    <input type="number" id="max-answer-time" value="60" min="1" style="width: 50px;">
+                    <input type="number" id="max-answer-time" value="30" min="1" style="width: 50px;">
                 </div>
                 <div class="control-group">
                     <label data-i18n="order_mode_label">질문 순서:</label>
@@ -77,25 +77,18 @@
                     </div>
                 </div>
                 <button id="start-btn" class="btn btn-primary" onclick="nextQuestion()" data-i18n="start_button">시작 / 다음 질문</button>
+                <button id="pause-btn" class="btn btn-secondary" onclick="togglePause()" data-i18n="pause_button">일시정지</button>
             </div>
 
             <div class="card-container" id="card-container">
                 <div class="card-header" id="card-header">
-                    <span class="card-title" data-i18n="card_title">Interview Card</span>
-                    <div class="card-header-buttons">
-                        <button id="pause-btn" class="btn btn-sm" onclick="togglePause()" data-i18n-title="pause_button" title="일시정지">
-                            <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-                        </button>
-                        <button id="flip-card-btn" class="btn btn-sm" data-i18n-title="flip_card_button" title="카드 뒤집기">
-                            <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0z" fill="none"/><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
-                        </button>
-                    </div>
+                    <span class="card-title">Interview Card</span>
                 </div>
                 <div class="card" id="card">
                     <div class="card-face card-front">
                         <div class="flip-timer-animation" id="flip-timer-animation"></div>
                         <h2 id="q-text" data-i18n="question_ready">시작 버튼을 눌러주세요</h2>
-                        <p style="color: #666; font-size: 0.9rem;" data-i18n="info_ready">잠시 후 카드가 뒤집힙니다.</p>
+                        <p style="color: #666; font-size: 0.9rem;" data-i18n="info_ready">또는 에디터에서 질문을 선택해보세요</p>
                     </div>
                     <div class="card-face card-back">
                         <div class="timer" id="timer">00:00</div>

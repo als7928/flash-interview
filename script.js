@@ -47,7 +47,7 @@ const translations = {
         theme_system: "System", theme_light: "Light", theme_dark: "Dark", flip_time_label: "Flip Time (s):",
         max_answer_time_label: "Max Answer Time (s):",
         start_button: "Start / Next", question_ready: "Press the Start button",
-        info_ready: "The card will flip shortly.", answer_start: "Start your answer!",
+        info_ready: "Or select a question from the editor.", answer_start: "Start your answer!",
         new_question_placeholder: "Enter new question.", new_tail_question_placeholder: "Enter new follow-up question.",
         new_question_category: "New Question",
         order_mode_label: "Order:",
@@ -62,9 +62,6 @@ const translations = {
         answer_placeholder: "Edit your answer.",
         edit_answer_title: "Edit Answer",
         pause_button: "Pause",
-        card_title: "Interview Card",
-        flip_card_button: "Flip Card",
-        pause_button: "Pause",
         resume_button: "Resume"
     },
     ko: {
@@ -73,7 +70,7 @@ const translations = {
         theme_system: "시스템", theme_light: "라이트", theme_dark: "다크", flip_time_label: "뒤집기 시간(초):",
         max_answer_time_label: "최대 답변 시간(초):",
         start_button: "시작 / 다음 질문", question_ready: "시작 버튼을 눌러주세요",
-        info_ready: "잠시 후 카드가 뒤집힙니다.", answer_start: "답변을 시작하세요!",
+        info_ready: "또는 에디터에서 질문을 선택해보세요.", answer_start: "답변을 시작하세요!",
         new_question_placeholder: "새로운 질문을 입력하세요.", new_tail_question_placeholder: "새로운 꼬리 질문을 입력하세요.",
         new_question_category: "새 질문",
         order_mode_label: "질문 순서:",
@@ -87,35 +84,31 @@ const translations = {
         confirm_delete: "정말로 이 질문과 모든 하위 질문을 삭제하시겠습니까?",
         answer_placeholder: "답변을 입력하세요.",
         edit_answer_title: "답변 수정",
-        card_title: "면접 카드",
-        flip_card_button: "카드 뒤집기",
         pause_button: "일시정지",
-        resume_button: "재개"
+        resume_button: "다시시작"
     }
 };
 
 // --- 유틸리티 함수 ---
 function setLanguage(lang) {
     currentLanguage = lang === 'system' ? ((navigator.language || navigator.userLanguage).startsWith('ko') ? 'ko' : 'en') : lang;
-    document.querySelectorAll('[data-i18n], [data-i18n-title]').forEach(el => {
-        const i18nKey = el.getAttribute('data-i18n');
-        const i18nTitleKey = el.getAttribute('data-i18n-title');
-
-        if (i18nKey && translations[currentLanguage] && translations[currentLanguage][i18nKey]) {
-            const translation = translations[currentLanguage][i18nKey];
-            if (el.hasAttribute('placeholder')) {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[currentLanguage] && translations[currentLanguage][key]) {
+            const translation = translations[currentLanguage][key];
+            if (el.tagName === 'BUTTON' && el.classList.contains('btn-sm')) {
+                el.title = translation;
+            } else if (el.hasAttribute('placeholder')) {
                 el.placeholder = translation;
             } else {
-                 const textNode = Array.from(el.childNodes).find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0);
+                // Check if the element has child nodes that are not elements
+                const textNode = Array.from(el.childNodes).find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0);
                 if (textNode) {
                     textNode.textContent = translation;
-                } else {
-                    el.textContent = translation;
+                } else if (el.textContent.trim().length > 0 || Object.keys(el.dataset).length > 0) {
+                     el.textContent = translation;
                 }
             }
-        }
-        if (i18nTitleKey && translations[currentLanguage] && translations[currentLanguage][i18nTitleKey]) {
-            el.title = translations[currentLanguage][i18nTitleKey];
         }
     });
     renderGraph();
@@ -127,7 +120,6 @@ function setLanguage(lang) {
         }
     } else {
          document.getElementById('q-text').textContent = translations[currentLanguage].question_ready;
-         document.getElementById('card-title').textContent = translations[currentLanguage].card_title;
     }
      document.getElementById('edit-answer-btn').title = translations[currentLanguage].edit_answer_title;
 }
@@ -384,10 +376,7 @@ function showQuestion(id) {
 function nextQuestion() {
     stopTimer();
     isPaused = false; // Reset pause state on next question
-    const pauseBtn = document.getElementById('pause-btn');
-    pauseBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`;
-    pauseBtn.title = translations[currentLanguage].pause_button;
-
+    document.getElementById('pause-btn').textContent = translations[currentLanguage].pause_button;
 
     if (activeQuestionId) { document.querySelector(`.node-item[data-id="${activeQuestionId}"]`)?.classList.remove('is-active'); }
     const card = document.getElementById('card');
@@ -496,32 +485,6 @@ function stopTimer() {
     }
 }
 
-function flipCard() {
-    if (!activeQuestionId) return;
-    const card = document.getElementById('card');
-
-    // If a flip is scheduled (from nextQuestion), cancel it.
-    if (flipTimeout) {
-        clearTimeout(flipTimeout);
-        flipTimeout = null;
-        const timerEl = document.getElementById('flip-timer-animation');
-        if (timerEl) {
-            timerEl.style.transition = 'none';
-            timerEl.style.transform = 'scaleX(0)';
-        }
-    }
-
-    const isFlippingToBack = !card.classList.contains('is-flipped');
-    card.classList.toggle('is-flipped');
-
-    if (isFlippingToBack) {
-        startTimer();
-    } else {
-        stopTimer();
-    }
-}
-
-
 function togglePause() {
     if (!currentTimer && !flipTimeout) return; // Can't pause if no timer is active
 
@@ -530,9 +493,7 @@ function togglePause() {
     const flipTimerEl = document.getElementById('flip-timer-animation');
 
     if (isPaused) {
-        pauseBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M8 5v14l11-7z"/></svg>`;
-        pauseBtn.title = translations[currentLanguage].resume_button;
-
+        pauseBtn.textContent = translations[currentLanguage].resume_button;
         if (flipTimeout) { // Pausing during the flip countdown
             clearTimeout(flipTimeout);
             // Capture remaining time
@@ -549,9 +510,7 @@ function togglePause() {
             pauseStart = Date.now();
         }
     } else {
-        pauseBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`;
-        pauseBtn.title = translations[currentLanguage].pause_button;
-
+        pauseBtn.textContent = translations[currentLanguage].pause_button;
         if (remainingTime > 0) { // Resuming during the flip countdown
             const card = document.getElementById('card');
             const newDuration = remainingTime / 1000;
@@ -611,7 +570,6 @@ function loadFromFile(i) {
 function initializeSettings() {
     const themeSelect = document.getElementById('theme-select');
     const langSelect = document.getElementById('language-select');
-
     const applyTheme = (theme) => { document.documentElement.setAttribute('data-theme', theme === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme); };
     
     themeSelect.addEventListener('change', () => { const val = themeSelect.value; localStorage.setItem('theme', val); applyTheme(val); });
@@ -690,11 +648,6 @@ function initializeDraggableCard() {
     let offsetX, offsetY, isDragging = false;
 
     cardHeader.addEventListener('mousedown', (e) => {
-        // Prevent dragging if the click is on a button
-        if (e.target.closest('button')) {
-            return;
-        }
-
         isDragging = true;
         // Calculate the offset from the top-left corner of the element
         offsetX = e.clientX - cardContainer.getBoundingClientRect().left;
@@ -774,22 +727,28 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeResizableCard();
     
     const card = document.getElementById('card');
-    const flipCardBtn = document.getElementById('flip-card-btn');
     const answerContainer = document.querySelector('.answer-container');
     const answerEditor = document.querySelector('.answer-editor');
     const answerInput = document.getElementById('answer-input');
     const answerText = document.getElementById('answer-text');
     const editAnswerBtn = document.getElementById('edit-answer-btn');
 
-    flipCardBtn.addEventListener('click', flipCard);
-
     card.addEventListener('click', (e) => {
-        if (!activeQuestionId || isPaused) return;
-        // Prevent flip if clicking on interactive elements inside the card
-        if (e.target.closest('button, textarea')) {
+        if (!activeQuestionId || isPaused) return; // Do not flip initial or paused card
+        // Do not flip if the edit button or the editor itself is clicked
+        if (e.target === editAnswerBtn || editAnswerBtn.contains(e.target) || e.target === answerInput) {
             return;
         }
-        flipCard();
+
+        if (card.classList.contains('is-flipped')) return;
+
+        if (flipTimeout) {
+            clearTimeout(flipTimeout);
+            flipTimeout = null;
+        }
+        
+        card.classList.add('is-flipped');
+        startTimer();
     });
 
     editAnswerBtn.addEventListener('click', () => {
