@@ -234,17 +234,24 @@ body {
 
 .card-header {
     width: 100%;
-    padding: 10px;
+    padding: 10px 16px;
     background-color: var(--panel-bg);
     border-bottom: 1px solid var(--border-color);
     border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
     cursor: move;
     user-select: none;
-    text-align: center;
     font-weight: 600;
     flex-shrink: 0; /* Prevent shrinking */
     z-index: 10; /* Ensure header is on top */
     position: relative; /* z-index needs a position other than static */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header-buttons {
+    display: flex;
+    gap: 8px;
 }
 
 .card { 
@@ -400,7 +407,10 @@ h2, #answer-text {
 .btn-primary { background-color: var(--primary-color); color: white; }
 .btn-secondary { background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); }
 .btn-sm { padding: 0; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: none; border: none; }
-.btn-sm svg { width: 22px; height: 22px; fill: var(--text-color); opacity: 0.6; transition: opacity 0.2s; }
+.btn-sm svg { width: 22px; height: 22px; fill: var(--text-color); opacity: 0.6; transition: opacity 0.2s; margin: 0; }
+#flip-card-btn svg {
+    fill: var(--text-color);
+}
 .btn-sm:hover svg { opacity: 1; }
 
 .node-item.dragging {
