@@ -523,7 +523,7 @@ function togglePause() {
                 remainingTime = 0; // Reset for next pause
             }, remainingTime);
         } else if (currentTimer) { // Resuming during the answer timer
-            pausedTime += (Date.now() - pauseStart);
+            startTimer();
         }
     }
 }
@@ -734,7 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const editAnswerBtn = document.getElementById('edit-answer-btn');
 
     card.addEventListener('click', (e) => {
-        if (!activeQuestionId || isPaused) return; // Do not flip initial or paused card
+        if (!activeQuestionId) return; // Do not flip initial card
         // Do not flip if the edit button or the editor itself is clicked
         if (e.target === editAnswerBtn || editAnswerBtn.contains(e.target) || e.target === answerInput) {
             return;
